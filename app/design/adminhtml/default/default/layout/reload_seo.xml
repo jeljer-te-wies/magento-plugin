@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<!-- /**
+ * @category   Reload
+ * @package    Reload_Seo
+ * @copyright  Copyright (c) 2013-2015 AndCode (http://www.andcode.nl)
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */ -->
+<layout>
+    <adminhtml_catalog_product_new>
+        <reference name="head">
+            <action method="addJs">
+                <script>reload/jquery.min.js</script>
+            </action>
+            <action method="addJs">
+                <script>reload/select2/select2.min.js</script>
+            </action>
+            <action method="addItem">
+                <type>js_css</type>
+                <name>reload/select2/select2.css</name>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="reload_seo/adminhtml_seo" template="reload_seo/seo.phtml" name="seoscore">
+                <action method="setData">
+                    <name>is_product_view</name>
+                    <value>1</value>
+                </action>
+            </block>
+        </reference>
+    </adminhtml_catalog_product_new>
+    <adminhtml_catalog_product_edit>
+        <reference name="head">
+            <action method="addJs">
+                <script>reload/jquery.min.js</script>
+            </action>
+            <action method="addJs">
+                <script>reload/select2/select2.min.js</script>
+            </action>
+            <action method="addItem">
+                <type>js_css</type>
+                <name>reload/select2/select2.css</name>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="reload_seo/adminhtml_seo" template="reload_seo/seo.phtml" name="seoscore">
+                <action method="setData">
+                    <name>is_product_view</name>
+                    <value>1</value>
+                </action>
+            </block>
+        </reference>
+    </adminhtml_catalog_product_edit>
+    <adminhtml_catalog_category_edit>
+        <reference name="head">
+            <action method="addJs">
+                <script>reload/jquery.min.js</script>
+            </action>
+            <action method="addJs">
+                <script>reload/select2/select2.min.js</script>
+            </action>
+            <action method="addItem">
+                <type>js_css</type>
+                <name>reload/select2/select2.css</name>
+            </action>
+        </reference>
+    </adminhtml_catalog_category_edit>
+</layout>

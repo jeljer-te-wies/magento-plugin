@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- /**
+ * @category   Reload
+ * @package    Reload_Seo
+ * @copyright  Copyright (c) 2013-2015 AndCode (http://www.andcode.nl)
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */ -->
+<config>
+    <tabs>
+        <reload translate="label" module="reload_seo">
+            <label>Reload</label>
+            <sort_order>100</sort_order>
+        </reload>
+    </tabs>
+    <sections>
+        <reload translate="label" module="reload_seo">
+            <label>SEO</label>
+            <tab>reload</tab>
+            <sort_order>1000</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>0</show_in_website>
+            <show_in_store>0</show_in_store>
+            <groups>
+                <reload_seo_group translate="label" module="reload_seo">
+                    <label>General</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1000</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <reload_seo_key translate="label comment">
+                            <label>API Key:</label>
+                            <comment>Enter your API Key</comment>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>20</sort_order>
+                            <validate>validate-alphanum</validate>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </reload_seo_key>
+                        <reload_seo_title_default translate="label comment">
+                            <label>Names as default keywords:</label>
+                            <comment>Do you want to use the product and category names as default keywords?</comment>
+                            <frontend_type>select</frontend_type>
+                            <sort_order>30</sort_order>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <!-- <validate>validate-alphanum</validate> -->
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </reload_seo_title_default>
+                    </fields>
+                </reload_seo_group>
+                <reload_seo_mappings translate="label comment" module="reload_seo">
+                    <label>Field mapping</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>2000</sort_order>
+                    <comment>Select the attributes that corresponds with the API fields. If you don't want to use a field, you can use the empty option at the top of the list.</comment>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <reload_seo_mapping_name>
+                            <label>name</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>10</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_name>
+                        <!-- <reload_seo_mapping_keywords>
+                            <label>keywords</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>20</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_keywords> -->
+                        <reload_seo_mapping_short_description>
+                            <label>short_description</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>30</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_short_description>
+                        <reload_seo_mapping_description>
+                            <label>description</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>40</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_description>
+                        <reload_seo_mapping_meta_title>
+                            <label>meta_title</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>50</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_meta_title>
+                        <reload_seo_mapping_meta_keyword>
+                            <label>meta_keyword</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>60</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_meta_keyword>
+                        <reload_seo_mapping_meta_description>
+                            <label>meta_description</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>70</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_meta_description>
+                        <reload_seo_mapping_url_key>
+                            <label>url_key</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>80</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_url_key>
+                        <reload_seo_mapping_status>
+                            <label>status</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>90</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                            <frontend_type>select</frontend_type>
+                            <source_model>reload_seo/adminhtml_system_config_source_attribute</source_model>
+                        </reload_seo_mapping_status>
+                    </fields>
+                </reload_seo_mappings>
+            </groups>
+        </reload>
+    </sections>
+</config>

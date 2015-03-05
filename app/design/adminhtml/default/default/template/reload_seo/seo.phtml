@@ -1,0 +1,329 @@
+<?php
+/**
+ * @category   Reload
+ * @package    Reload_Seo
+ * @copyright  Copyright (c) 2013-2015 AndCode (http://www.andcode.nl)
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+?>
+
+<?php 
+if($this->getScore() != null) { 
+//Only show the html and javascript if the score object is not null.
+?>
+<div id="reload-seo-scores">
+	<div class="seo-results">
+		<div class="base-score seo-box">
+			<p><?php echo Mage::helper('reload_seo')->__('Based on our information we have calculated the following SEO-score:'); ?></p>
+			<span class="seo-score" style="background-color: <?php echo $this->getScore()->getColor(); ?>;"><?php echo $this->getScore()->getScore(); ?></span>
+		</div>
+		<div class="seo-rules">
+			<table cellpadding="0" cellspacing="0">
+				<tbody>
+					<?php foreach($this->getScore()->getRulesCollection() as $rule) { ?>
+						<tr class="seo-rule">
+							<td class="indicator"><div class="indicator-dot" style="background-color: <?php echo $rule->getStatus(); ?>;"></div></td>
+							<td><?php echo $rule->getTitle(); ?></td>
+						</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+<?php $fieldMapping = Mage::helper('reload_seo')->getFieldMappings($this->getScore()->getType()); ?>
+var reloadseo = {
+
+	/**
+	 * The reference of the key up timer.
+	 * @type int
+	 */
+	keyupTimer: null,
+
+	/**
+	 * The reference of the ajax request.
+	 * @type int
+	 */
+	currentRequest: null,
+
+	/**
+	 * The type of the current action, product or category
+	 * @type string
+	 */
+	type: '<?php echo $this->getScore()->getType(); ?>',
+
+	/**
+	 * The url which should be called when we want to get results.
+	 * @type string
+	 */
+	url: '<?php echo $this->getUrl('reload_seo/adminhtml_seo/ajax', array('type' => $this->getScore()->getType(), 'reference' => $this->getScore()->getReferenceId())); ?>',
+	data: {},
+
+	/**
+	 * init initializes everything
+	 * @return void
+	 */
+	init: function()
+	{
+		var self = this;
+		if(self.type === 'product')
+		{
+			var nameRow = $reloadseo('#name').parents('tr').first();
+		}
+		else
+		{
+			var nameRow = $reloadseo("input[name='general[name]']").first().parents('tr').first();
+		}
+
+		var row = $reloadseo('<tr><td class="label"><label for="reload_seo_keywords"><?php echo Mage::helper('reload_seo')->__('SEO keywords'); ?></label></td><td class="value"><input id="reload_seo_keywords" name="reload_seo_keywords" class="track-seo" value="<?php echo $this->getScore()->getKeywords(); ?>" type="text"></td><td class="scope-label"></td></tr>');
+		row.find('input').first().data('track-field', 'keywords');
+		row.insertAfter(nameRow);
+
+		//Loop over the field mapping and add the class track-seo to all fields which belong to the field mapping.
+		//Put the external field name in the data-track-field attribute.
+		<?php foreach($fieldMapping as $external => $internal) { ?>
+			<?php if($this->getScore()->getType() === 'product') { ?>
+				$reloadseo("[name='product[<?php echo $internal; ?>]']").addClass('track-seo').data('track-field', '<?php echo $external; ?>');
+			<?php } else { ?>
+				$reloadseo("[name='general[<?php echo $internal; ?>]']").addClass('track-seo').data('track-field', '<?php echo $external; ?>');
+			<?php } ?>
+		<?php } ?>
+		//Bind the key up listener to all fields.
+		$reloadseo(".track-seo").bind('keyup', function()
+		{
+			//On key up reset the timeout.
+			clearTimeout(self.keyupTimer);
+			self.keyupTimer = setTimeout(function()
+			{
+				//When the timeout is over we want to update the seo.
+				self.updateSeo();
+			}, 300);
+		});
+
+		//Bind the change listener to all fields.
+		$reloadseo(".track-seo").bind('change', function()
+		{
+			//Clear the key up timeout and update the seo directly.
+			clearTimeout(self.keyupTimer);
+			self.updateSeo();
+		});
+
+		//Collect the initial data.
+		self.data = self.collectData();
+
+		$reloadseo('#reload_seo_keywords').select2({
+			tags: true,
+			placeholder: '',
+			tokenSeparators: [","],
+			minimumInputLength: 1,
+			maximumSelectionLength: 2,
+			initSelection : function (element, callback) {
+				var asString = $reloadseo('#reload_seo_keywords').val();
+				var data = [];
+				$reloadseo.each(asString.split(','), function(k, v)
+				{
+					data.push({id: v, text: v});
+				});		        
+		    callback(data);
+		    },
+			ajax: {
+				url: "http://suggestqueries.google.com/complete/search?callback=?",
+				dataType: 'jsonp',
+				data: function (term, page) {
+		            return {q: term, hl: 'en', client: 'firefox' };
+		        },
+		        results: function (data, page) { 
+		        	var items = {};
+
+		        	$reloadseo.each(data[1], function(k, v)
+		        	{
+		        		items[v.toLowerCase()] = v.toLowerCase();
+		        		
+		        	});
+		        	
+		        	var input = $reloadseo('#reload_seo_keywords').data().select2.search.val();
+		        	$reloadseo.each(input.split(','), function(k, v)
+					{
+							items[v.toLowerCase()] = v.toLowerCase();
+					});
+
+		        	var results = [];
+		        	results.push({id: input.toLowerCase(), text: input.toLowerCase()});
+		        	$reloadseo.each(items, function(k, v)
+		        	{
+		        		results.push({id: v, text: v});
+		        	});
+
+		            return { results: results };
+		        },
+			}
+		});
+	},
+
+	/**
+	 * collectData collects all data from the input fields.
+	 * @return Array
+	 */
+	collectData: function()
+	{
+		var data = {};
+		//Loop over all fields and get the value.
+		$reloadseo('.track-seo').each(function()
+		{
+			data[$reloadseo(this).data('track-field')] = $reloadseo(this).val();
+		});
+		return data;
+	},
+
+	/**
+	 * updateSeo makes an AJAX call to get the seo score and rules.
+	 * @return void
+	 */
+	updateSeo: function()
+	{
+		var self = this;
+
+		//Collect the data and check if something changed.
+		var data = self.collectData();
+		var changed = false;
+		$reloadseo.each(data, function(k, v)
+		{
+			if(self.data[k] != v)
+			{
+				changed = true;
+			}
+		});
+
+		if(changed)
+		{
+			//Changes were made, abort the current request.
+			if(self.currentRequest !== null)
+			{
+				self.currentRequest.abort();
+			}
+			self.data = data;
+
+			//Obtain the form key.
+			data.form_key = '<?php echo Mage::getSingleton('core/session')->getFormKey(); ?>';
+
+			//Make the AJAX request.
+			self.currentRequest = $reloadseo.ajax({
+				url: self.url,
+				type: 'post',
+				data: data,
+				dataType: 'json'
+			}).done(function(data)
+			{
+				if(data != null && 'score' in data)
+				{
+					//Only do something when the data was valid.
+					var element = $reloadseo('#reload-seo-scores');
+
+					//Set the basic score value and color.
+					element.find('.base-score>span.seo-score').first().text(data.score.toString());
+					element.find('.base-score>span.seo-score').first().css('background-color', data.color);
+
+					//Remove all current rules.
+					element.find('.seo-rules>table>tbody>tr.seo-rule').remove();
+					var tbodyElement = element.find('.seo-rules>table>tbody').first();
+					$reloadseo.each(data.rules, function(k, v)
+					{
+						//Loop over the rules and create html rows.
+						tbodyElement.append($reloadseo("<tr class='seo-rule'><td class='indicator'><div class='indicator-dot' style='background-color: " + v.color + ";'></div></td><td>" + v.title + "</td></tr>"));
+					});
+				}
+			});
+		}
+	}
+};
+
+reloadseo.init();
+</script>
+<?php } ?>
+<style>
+#reload-seo-scores
+{
+	float: right;
+	width: 30%;
+}
+<?php if($this->getScore() != null) { ?>
+#content.main-col > .main-col-inner > form#product_edit_form,
+#content.main-col > .main-col-inner > div#category-edit-container > form#category_edit_form
+{
+	float: left;
+	width: 70%;
+}
+<?php } ?>
+.seo-score {
+	background-color: #6dbb4a;
+	display: inline-block;
+	min-width: 10px;
+	padding: 3px 7px;
+	font-size: 29px;
+	font-weight: 700;
+	line-height: 1;
+	color: #fff;
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: baseline;
+	border-radius: 10px;
+}
+.seo-rules {
+	border-top: 1px solid #d6d6d6;
+}
+.seo-rules > table
+{
+	width: 100%;
+}
+.seo-results
+{
+
+	padding-left: 25px;
+}
+.seo-box
+{
+	background-color: #F4F4F4;
+	border: 1px solid #EDEDED;
+	padding: 5px;
+	margin-bottom: 20px;
+}
+.seo-rule > td
+{
+	border-left: 1px solid #d6d6d6;
+	border-right: 1px solid #d6d6d6;
+	border-bottom: 1px solid #d6d6d6;
+	background-color: #fafafa;
+	color: #333;
+	padding: 5px;
+}
+.seo-rule > .indicator
+{
+	background-color: #fafafa;
+	vertical-align: middle;
+	text-align: center;
+	width: 12px;
+	padding-left: 9px;
+	padding-right: 8px;
+}
+.seo-rule > .indicator > .indicator-dot
+{
+	width: 12px;
+	height: 12px;
+	border-radius: 100px;
+	opacity: 0.7;
+}
+.seo-score
+{
+	font-size: 20px;
+	font-weight: bold;
+}
+.base-score > p
+{
+	margin-bottom: 15px;
+}
+.select2-container
+{
+	min-width: 200px;
+}
+</style>
