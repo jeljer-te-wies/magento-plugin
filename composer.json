@@ -1,0 +1,13 @@
+{
+    "name": "reloadseo/magento-plugin",
+    "type": "magento-module",
+    "description":"On-page search optimalization for Magento",
+    "homepage":"https://www.reloadseo.com",
+    "keywords": ["magento","SEO"],     
+    "authors":[
+        {
+            "name":"Content Cloud",
+            "email":"info@contentcloud.com"
+        }
+    ]
+}
