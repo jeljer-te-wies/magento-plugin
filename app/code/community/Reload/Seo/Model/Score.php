@@ -45,10 +45,13 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
             $id = 0;
         }
 
+        $storeId = (int) Mage::app()->getRequest()->getParam('store');
+
         //Search the collection for items with the type and the reference id and select the first result.
         $score = $this->getCollection()
             ->addFieldToFilter('type', array('eq' => $type))
             ->addFieldToFilter('reference_id', array('eq' => $id))
+            ->addFieldToFilter('store_id', array('eq' => $storeId))
             ->getFirstItem();
 
         if($score === null)
@@ -57,9 +60,24 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
             $score = Mage::getModel('reload_seo/score');
         }
 
+        if($score->getKeywords() == null && $score->getStoreId() != 0)
+        {
+            $defaultScore = $this->getCollection()
+                ->addFieldToFilter('type', array('eq' => $type))
+                ->addFieldToFilter('reference_id', array('eq' => $id))
+                ->addFieldToFilter('store_id', array('eq' => 0))
+                ->getFirstItem();
+
+            if($defaultScore != null)
+            {
+                $score->setKeywords($defaultScore->getKeywords());
+            }
+        }
+
         //Set the type and reference id for the case when the score object does not exist yet.
         $score->setType($type);
         $score->setReferenceId($id);
+        $score->setStoreId($storeId);
 
         if($id == null)
         {
@@ -88,6 +106,7 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
             $rule->delete();
         }
 
+        $transaction = Mage::getModel('core/resource_transaction');
         foreach($result['rules'] as $ruleResult)
         {
             //Loop over the rules in the result and bind them to this score object.
@@ -96,8 +115,10 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
             $rule->setField($ruleResult['field']);
             $rule->setTitle($ruleResult['title']);
             $rule->setStatus($ruleResult['color']);
-            $rule->save();
+
+            $transaction->addObject($rule);
         }
+        $transaction->save();
     }
 
     public function generateKeywords($name)

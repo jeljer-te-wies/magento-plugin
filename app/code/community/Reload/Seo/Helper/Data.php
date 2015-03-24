@@ -55,7 +55,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
 
         //Create the complete url and execute it.
         $url = $this->url . $this->version . 'seo/validate_key?' . http_build_query(array('key' => $apiKey, 'website' => Mage::getBaseUrl()));
-        $result = $this->exec($url);
+        $result = $this->executeCurlRequest($url);
         if($result === null)
         {
             //No result, something went wrong.
@@ -95,8 +95,15 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
     public function updateProducts($productIds)
     {
         //Obtain all products were the entity_id is in the array.
-        $productCollection = Mage::getModel('catalog/product')
-            ->getCollection()
+        $productCollection = Mage::getModel('catalog/product')->getCollection();
+
+        $storeId = (int) Mage::app()->getRequest()->getParam('store');
+        if($storeId > 0)
+        {
+            $productCollection->setStoreId($storeId);
+        }
+            
+        $productCollection = $productCollection
             ->addAttributeToFilter('entity_id', array('in' => $productIds))
             ->addAttributeToSelect('*');
 
@@ -110,7 +117,6 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         {
             $scoresByProductId[$score->getReferenceId()] = $score;
         }
-
 
         //Obtain the field mapping for the products.
         $fieldMapping = $this->getFieldMappings('product');
@@ -133,12 +139,29 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
                 {
                     $score->generateKeywords($product->getName());
                 }
+
+                if($score->getKeywords() == null && $storeId > 0)
+                {
+                    $defaultScore = $this->getCollection()
+                        ->addFieldToFilter('type', array('eq' => $score->getType()))
+                        ->addFieldToFilter('reference_id', array('eq' => $score->getReferenceId()))
+                        ->addFieldToFilter('store_id', array('eq' => 0))
+                        ->getFirstItem();
+
+                    if($defaultScore != null)
+                    {
+                        $score->setKeywords($defaultScore->getKeywords());
+                    }
+                }
+
                 $data[] = http_build_query(array('products[]keywords' => $score->getKeywords()));
             }
             elseif($useNameAsDefaultKeywords)
             {
                 $data[] = http_build_query(array('products[]keywords' => $product->getName()));
             }
+
+            $data[] = http_build_query(array('products[]store_id' => $product->getStoreId()));
 
             foreach($fieldMapping as $external => $internal)
             {
@@ -147,6 +170,19 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
                 {
                     $data[] = http_build_query(array('products[]' . $external => $product->getData($internal)));
                 }
+            }
+
+            $images = array();
+            foreach($product->getMediaGalleryImages() as $image)
+            {
+                $images[] = array(
+                    'url' => $image->getUrl(),
+                    'name' => $image->getLabel(),
+                );
+            }
+            if(count($images) > 0)
+            {
+                $data[] = http_build_query(array('products[]images[]' => $images));
             }
         }
 
@@ -161,7 +197,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             )
         );
         //Execute the request.
-        $results = $this->exec($url, implode('&', $data), true);
+        $results = $this->executeCurlRequest($url, implode('&', $data), true);
 
         if($results === null)
         {
@@ -246,7 +282,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         );
 
         //Execute the request.
-        $result = $this->exec($url, null, false, true);
+        $result = $this->executeCurlRequest($url, null, false, true);
         if($result === null || !array_key_exists('sku', $result))
         {
             //Something went wrong, throw the prepared error.
@@ -297,6 +333,15 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             //Obtain the score object for later use.
             $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'product');
             $type = 'product';
+
+            $data['product[images]'] = array();
+            foreach($item->getMediaGalleryImages() as $image)
+            {
+                $data['product[images]'][] = array(
+                    'url' => $image->getUrl(),
+                    'name' => $image->getLabel(),
+                );
+            }
         }
 
         if($score->getKeywords() == null && Mage::getStoreConfig('reload/reload_seo_group/reload_seo_title_default'))
@@ -304,7 +349,9 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $score->generateKeywords($item->getName());
         }
 
+        $data['product[product_id]'] = $type . '-' . $item->getId();
         $data['product[keywords]'] = $score->getKeywords();
+        $data['product[store_id]'] = $item->getStoreId();
 
         //Obtain the field mapping by the type and loop over each field, obtain the data and store it.
         $fieldMapping = $this->getFieldMappings($type);
@@ -331,7 +378,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         //Execute the request.
-        $result = $this->exec($url, $data);
+        $result = $this->executeCurlRequest($url, $data);
         if($result === null || !array_key_exists('score', $result))
         {
             //Something went wrong, throw the prepared error.
@@ -357,7 +404,6 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         if($type === 'product')
         {
             //The type is product.
-            $preparedData['product[sku]'] = $referenceId;
             $type = 'product';
         }
         else
@@ -366,6 +412,8 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $preparedData['product[sku]'] = 'category-' . $referenceId;
             $type = 'category';
         }
+
+        $data['product[product_id]'] = $type . '-' . $referenceId;
 
         foreach($data as $key => $value)
         {
@@ -385,7 +433,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         );
 
         //Excecute the call.
-        $result = $this->exec($url, $preparedData);
+        $result = $this->executeCurlRequest($url, $preparedData);
         if($result === null || !array_key_exists('score', $result))
         {
             //Somethineg went wrong, throw an exception.
@@ -449,7 +497,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
      * @param  boolean $postAsString If true, the $postdata is an string.
      * @return array
      */
-    protected function exec($url, $postdata = null, $postAsString = false, $isDelete = false)
+    protected function executeCurlRequest($url, $postdata = null, $postAsString = false, $isDelete = false)
     {
         //Obtain an curl handle.
         $ch = curl_init($url);

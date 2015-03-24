@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL); ini_set('display_errors', '1');
 /**
  * @category   Reload
  * @package    Reload_Seo
@@ -99,6 +100,8 @@ class Reload_Seo_Model_Observer
 	{
 		try
 		{
+			$storeId = (int) Mage::app()->getRequest()->getParam('store');
+
 			//Obtain the collection from the observer.
 			$collection = $observer->getCollection();
 
@@ -108,7 +111,7 @@ class Reload_Seo_Model_Observer
 	            array(
 	                'scores' => Mage::getSingleton('core/resource')->getTableName('reload_seo/score')
 	            ), 
-	            "e.entity_id = scores.reference_id AND scores.type = 'product'", 
+	            "e.entity_id = scores.reference_id AND scores.type = 'product' AND scores.store_id = '" . $storeId . "'", 
 	            array(
 	                'seo_score' => 'scores.score', 
 	                'seo_color' => 'scores.color'
@@ -130,6 +133,7 @@ class Reload_Seo_Model_Observer
 	    catch(Exception $ex)
 	    {
 	    	//Hmzzz
+	    	Mage::getSingleton('adminhtml/session')->addError(Mage::helper('reload_seo')->__('Something went wrong while loading the product SEO statusses.'));
 	    }
 	}
 	/**
@@ -210,7 +214,7 @@ class Reload_Seo_Model_Observer
 				//Ask the helper to update the item.
 				Mage::helper('reload_seo')->updateItem($item);
 			}
-			catch(\Exception $ex)
+			catch(Exception $ex)
 			{
 				//Something went wrong while updating, show the error message.
 				Mage::getSingleton('adminhtml/session')->addError($errorMessage);

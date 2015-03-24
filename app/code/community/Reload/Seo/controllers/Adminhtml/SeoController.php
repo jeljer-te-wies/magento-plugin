@@ -25,15 +25,16 @@ class Reload_Seo_Adminhtml_SeoController extends Mage_Adminhtml_Controller_Actio
 
         try
         {
-            //Call the helper to execute an API request to Reload and json_encode the result.
-            echo json_encode(Mage::helper('reload_seo')->ajaxCheck($type, $referenceId, $data));
+            //Call the helper to execute an API request to Reload.
+            $response = Mage::helper('reload_seo')->ajaxCheck($type, $referenceId, $data);
         }
         catch(Exception $ex)
         {
             //Something went wrong, result null.
-            echo json_encode(null);
+            $response = null;
         }
-        exit;
+        $this->getResponse()->clearHeaders()->setHeader('Content-type','application/json', true);
+        $this->getResponse()->setBody(json_encode($response));
     }
 
     /**
