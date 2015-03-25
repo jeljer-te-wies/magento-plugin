@@ -413,7 +413,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $type = 'category';
         }
 
-        $data['product[product_id]'] = $type . '-' . $referenceId;
+        $preparedData['product[product_id]'] = $type . '-' . $referenceId;
 
         foreach($data as $key => $value)
         {

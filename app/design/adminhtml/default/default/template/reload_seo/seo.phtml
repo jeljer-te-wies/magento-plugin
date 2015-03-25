@@ -66,12 +66,47 @@ var reloadseo = {
 	 */
 	init: function()
 	{
+		var self = this;
+
+		//Bind the tinymceBeforeSetContent to add the seo results to the wysiwyg when it's opened.
 		varienGlobalEvents.attachEventHandler('tinymceBeforeSetContent', function()
 		{ 
 			reloadseo.copyResultsToWysiwyg();
 		});
 
-		var self = this;
+		//Bind the showTab event to try and listen to the file upload.
+		varienGlobalEvents.attachEventHandler('showTab', function()
+		{
+			if(typeof media_gallery_contentJsObject !== 'undefined')
+			{
+				if(typeof media_gallery_contentJsObject.uploader !== 'undefined' && media_gallery_contentJsObject.uploader != null)
+				{
+					//Wait half a second to let the script initialze the media gallery uploader.
+					setTimeout(function()
+					{
+						if(typeof media_gallery_contentJsObject.uploader.uploader !== 'undefined' && media_gallery_contentJsObject.uploader.uploader != null)
+						{
+							//Bind the file upload complete event.
+							media_gallery_contentJsObject.uploader.uploader.addEventListener('complete', function() 
+							{ 
+								//Trigger the reload.
+								$reloadseo(".track-seo").first().trigger('change');
+							});
+						}
+					}, 500);
+				}
+			}
+		});
+
+		if($reloadseo('#media_gallery_content_grid').length)
+		{
+			//Bid all input fields in the images grid to reload the seo results on change.
+			$reloadseo('#media_gallery_content_grid').on('keyup', 'input', function() 
+			{ 
+				self.updateSeo();
+			});
+		}
+
 		if(self.type === 'product')
 		{
 			var nameRow = $reloadseo('#name').parents('tr').first();
@@ -188,6 +223,20 @@ var reloadseo = {
 			}
 		});
 
+		//Collect the image urls and labels.
+		var images = {};
+		if(typeof media_gallery_contentJsObject !== 'undefined' && typeof media_gallery_contentJsObject.images !== 'undefined')
+		{
+			$reloadseo.each(media_gallery_contentJsObject.images, function(k, v)
+			{
+				images[k] = {
+					url: v.url,
+					name: v.label
+				};
+			});
+		}
+		data['images'] = images;
+
 		return data;
 	},
 
@@ -197,6 +246,7 @@ var reloadseo = {
 	 */
 	updateSeo: function(replaceData)
 	{
+		console.log('reloading');
 		var self = this;
 
 		//Collect the data and check if something changed.
@@ -266,23 +316,31 @@ var reloadseo = {
 	{
 		var self = this;
 
+		//Get the wysiwyg element.
 		var wysiwyg = $reloadseo('#catalog-wysiwyg-editor');
 
+		//Only execute when the wysiwyg does not contain the seo results yet.
 		if(!wysiwyg.hasClass('contains-seo-results'))
 		{
+			//Clone the result element.
 			var element = $reloadseo('#reload-seo-scores').clone();
 			element.attr('id', element.attr('id') + '-wysiwyg');
 
+			//Find the textarea in the editor.
 			var textarea = wysiwyg.find('textarea').first();
 			if(textarea.length)
 			{
+				//Get the container.
 				var container = textarea.parents('span.field-row').first();
 				if(container.length)
 				{
+					//Append the results element to the container.
 					container.append(element);
 					container.addClass('seo-results-container');
+					//Set the class so the results won't be added twice.
 					wysiwyg.addClass('contains-seo-results');
 
+					//Bind the tinyMCE onChange event to update when the values changed.
 					tinyMCE.activeEditor.onChange.add(function(e) 
 					{ 
 						//Clear the key up timeout and update the seo directly.
@@ -291,6 +349,7 @@ var reloadseo = {
 						var fieldName = e.editorId.replace('_editor', '');
 						var content = e.getContent();
 
+						//Update the seo results and add custom content from the editor.
 						self.updateSeo({field: fieldName, content: content});
 					});
 
