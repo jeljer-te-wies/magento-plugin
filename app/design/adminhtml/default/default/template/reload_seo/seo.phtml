@@ -215,7 +215,10 @@ var reloadseo = {
 		//Loop over all fields and get the value.
 		$reloadseo('.track-seo').each(function()
 		{
-			data[$reloadseo(this).data('track-field')] = $reloadseo(this).val();
+			if(typeof $reloadseo(this).data('track-field') !== 'undefined')
+			{
+				data[$reloadseo(this).data('track-field')] = $reloadseo(this).val();
+			}
 
 			if(typeof replaceData !== 'undefined' && replaceData.field == $reloadseo(this).data('track-field-internal'))
 			{
