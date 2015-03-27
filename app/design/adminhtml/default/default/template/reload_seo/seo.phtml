@@ -16,6 +16,7 @@ if($this->getScore() != null) {
 		<div class="base-score seo-box">
 			<p><?php echo Mage::helper('reload_seo')->__('Based on our information we have calculated the following SEO-score:'); ?></p>
 			<span class="seo-score" style="background-color: <?php echo $this->getScore()->getColor(); ?>;"><?php echo $this->getScore()->getScore(); ?></span>
+			<button type="button" class="seo-toggle-button">Toggle</button>
 		</div>
 		<div class="seo-rules">
 			<table cellpadding="0" cellspacing="0">
@@ -68,10 +69,20 @@ var reloadseo = {
 	{
 		var self = this;
 
+		if(self.cookieHandler.get('showseo') === 'false')
+		{
+			$reloadseo('body').addClass('hide-seo-results');
+		}
+
+		$reloadseo('.seo-toggle-button').off('click');
+		$reloadseo('.seo-toggle-button').on('click', self.toggle);
+
 		//Bind the tinymceBeforeSetContent to add the seo results to the wysiwyg when it's opened.
 		varienGlobalEvents.attachEventHandler('tinymceBeforeSetContent', function()
 		{ 
 			reloadseo.copyResultsToWysiwyg();
+			$reloadseo('.seo-toggle-button').off('click');
+			$reloadseo('.seo-toggle-button').on('click', self.toggle);
 		});
 
 		//Bind the showTab event to try and listen to the file upload.
@@ -203,6 +214,20 @@ var reloadseo = {
 		        },
 			}
 		});
+	},
+
+	toggle: function()
+	{
+		if($reloadseo('body').hasClass('hide-seo-results'))
+		{
+			$reloadseo('body').removeClass('hide-seo-results');
+			reloadseo.cookieHandler.set('showseo', 'true');
+		}
+		else
+		{
+			$reloadseo('body').addClass('hide-seo-results');
+			reloadseo.cookieHandler.set('showseo', 'false');
+		}
 	},
 
 	/**
@@ -372,7 +397,55 @@ var reloadseo = {
 				}
 			}
 		}
-	}
+	},
+
+	cookieHandler: (function()
+	{
+	    var self = {};
+	    
+	    self.cookies = {};
+	    
+	    self.init = function()
+	    {
+	        self.cookies = {};
+	        
+	        var cookieString = document.cookie;
+	        var cookieData = cookieString.split("; ");
+	        
+	        if(typeof cookieData != 'undefined')
+	        {
+	            for(var i in cookieData)
+	            {
+	                if(typeof cookieData[i] == 'string')
+	                {
+	                    var data = cookieData[i].split("=");
+	                    if(typeof data != 'undefined' && data.length == 2)
+	                    {
+	                        self.cookies[data[0]] = data[1];
+	                    }
+	                }
+	            }
+	        }
+	    };
+	    
+	    self.init();
+
+	    self.get = function(name)
+	    {
+	        if(name in this.cookies)
+	            return this.cookies[name];
+	        
+	        return null;
+	    };
+
+	    self.set = function(name, value)
+	    {
+	        document.cookie = name + '=' + value + '; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/'
+	        self.init();
+	    };
+	    
+	    return self;
+	}(this))
 };
 
 reloadseo.init();
@@ -383,16 +456,34 @@ reloadseo.init();
 {
 	width: 100%;
 }*/
-.contains-seo-results .seo-results-container > div
+.dialog
 {
-	width: 70%;
-	float: left;
+	width: 80% !important;
+	left: 10% ! important;
+	top: 10% !important;
+}
+.dialog .magento_content
+{
+	width: 100% !important;
 }
 
+body.hide-seo-results .contains-seo-results .seo-results-container > div:first-child
+{
+	width: 92% !important;
+}
+.dialog.contains-seo-results .magento_buttons
+{
+	float: right;
+}
 .reload-seo-scores
 {
 	float: right;
 	width: 30% !important;
+}
+
+.reload-seo-scores .seo-toggle-button
+{
+	float: right;
 }
 
 .contains-seo-results .reload-seo-scores
@@ -400,14 +491,44 @@ reloadseo.init();
 	margin-top: 40px;
 	margin-bottom: 20px;
 }
-<?php if($this->getScore() != null) { ?>
+body.hide-seo-results .reload-seo-scores > .seo-results > .base-score > p,
+body.hide-seo-results .reload-seo-scores > .seo-results > .seo-rules
+{
+	display: none;
+}
+body.hide-seo-results .reload-seo-scores
+{
+	width: 8% !important;
+}
+.contains-seo-results .seo-results-container > div
+{
+	width: 70%;
+	float: left;
+}
+body.hide-seo-results .reload-seo-scores > .seo-results > .base-score
+{
+	text-align: center;
+	display: inline-block;
+}
+
+body.hide-seo-results .reload-seo-scores .seo-toggle-button
+{
+	float: none !important;
+	margin-top: 10px;
+}
+
 #content.main-col > .main-col-inner > form#product_edit_form,
 #content.main-col > .main-col-inner > div#category-edit-container > form#category_edit_form
 {
 	float: left;
 	width: 70%;
 }
-<?php } ?>
+body.hide-seo-results #content.main-col > .main-col-inner > form#product_edit_form,
+body.hide-seo-results #content.main-col > .main-col-inner > div#category-edit-container > form#category_edit_form
+{
+	width: 92%;
+}
+
 .seo-score {
 	background-color: #6dbb4a;
 	display: inline-block;
