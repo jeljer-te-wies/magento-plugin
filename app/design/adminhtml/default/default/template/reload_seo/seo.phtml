@@ -16,7 +16,7 @@ if($this->getScore() != null) {
 		<div class="base-score seo-box">
 			<p><?php echo Mage::helper('reload_seo')->__('Based on our information we have calculated the following SEO-score:'); ?></p>
 			<span class="seo-score" style="background-color: <?php echo $this->getScore()->getColor(); ?>;"><?php echo $this->getScore()->getScore(); ?></span>
-			<button type="button" class="seo-toggle-button">Toggle</button>
+			<button type="button" class="seo-toggle-button">Hide</button>
 		</div>
 		<div class="seo-rules">
 			<table cellpadding="0" cellspacing="0">
@@ -72,6 +72,7 @@ var reloadseo = {
 		if(self.cookieHandler.get('showseo') === 'false')
 		{
 			$reloadseo('body').addClass('hide-seo-results');
+			$reloadseo('.seo-toggle-button').html('Show');
 		}
 
 		$reloadseo('.seo-toggle-button').off('click');
@@ -221,11 +222,13 @@ var reloadseo = {
 		if($reloadseo('body').hasClass('hide-seo-results'))
 		{
 			$reloadseo('body').removeClass('hide-seo-results');
+			$reloadseo('.seo-toggle-button').html('Hide');
 			reloadseo.cookieHandler.set('showseo', 'true');
 		}
 		else
 		{
 			$reloadseo('body').addClass('hide-seo-results');
+			$reloadseo('.seo-toggle-button').html('Show');
 			reloadseo.cookieHandler.set('showseo', 'false');
 		}
 	},
