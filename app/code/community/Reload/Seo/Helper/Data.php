@@ -142,7 +142,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
 
                 if($score->getKeywords() == null && $storeId > 0)
                 {
-                    $defaultScore = $this->getCollection()
+                    $defaultScore = Mage::getModel('reload_seo/score')->getCollection()
                         ->addFieldToFilter('type', array('eq' => $score->getType()))
                         ->addFieldToFilter('reference_id', array('eq' => $score->getReferenceId()))
                         ->addFieldToFilter('store_id', array('eq' => 0))
