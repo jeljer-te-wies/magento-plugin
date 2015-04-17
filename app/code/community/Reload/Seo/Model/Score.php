@@ -123,16 +123,17 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
 
     public function generateKeywords($name)
     {
-        $exploded = explode(' ', $name);
-        $unique = array();
-        foreach($exploded as $explode)
-        {
-            $explode = str_replace(' ', '', $explode);
-            if($explode != null)
-            {
-                $unique[strtolower($explode)] = strtolower($explode);
-            }
-        }
-        $this->setKeywords(implode(',', array_values($unique)));
+        // $exploded = explode(' ', $name);
+        // $unique = array();
+        // foreach($exploded as $explode)
+        // {
+        //     $explode = str_replace(' ', '', $explode);
+        //     if($explode != null)
+        //     {
+        //         $unique[strtolower($explode)] = strtolower($explode);
+        //     }
+        // }
+        // $this->setKeywords(implode(',', array_values($unique)));
+        $this->setKeywords($name);
     }
 }
