@@ -18,6 +18,9 @@
                 <type>js_css</type>
                 <name>reload/select2/select2.css</name>
             </action>
+            <action method="addJs">
+                <script>reload/seo.js</script>
+            </action>
             <action method="addCss">
                 <stylesheet>reload_seo/css/product.css</stylesheet>
             </action>
@@ -43,6 +46,9 @@
                 <type>js_css</type>
                 <name>reload/select2/select2.css</name>
             </action>
+            <action method="addJs">
+                <script>reload/seo.js</script>
+            </action>
             <action method="addCss">
                 <stylesheet>reload_seo/css/product.css</stylesheet>
             </action>
@@ -67,6 +73,9 @@
             <action method="addItem">
                 <type>js_css</type>
                 <name>reload/select2/select2.css</name>
+            </action>
+            <action method="addJs">
+                <script>reload/seo.js</script>
             </action>
             <action method="addCss">
                 <stylesheet>reload_seo/css/product.css</stylesheet>
