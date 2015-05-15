@@ -18,6 +18,9 @@
                 <type>js_css</type>
                 <name>reload/select2/select2.css</name>
             </action>
+            <action method="addCss">
+                <stylesheet>reload_seo/css/product.css</stylesheet>
+            </action>
         </reference>
         <reference name="content">
             <block type="reload_seo/adminhtml_seo" template="reload_seo/seo.phtml" name="seoscore">
@@ -40,6 +43,9 @@
                 <type>js_css</type>
                 <name>reload/select2/select2.css</name>
             </action>
+            <action method="addCss">
+                <stylesheet>reload_seo/css/product.css</stylesheet>
+            </action>
         </reference>
         <reference name="content">
             <block type="reload_seo/adminhtml_seo" template="reload_seo/seo.phtml" name="seoscore">
@@ -61,6 +67,9 @@
             <action method="addItem">
                 <type>js_css</type>
                 <name>reload/select2/select2.css</name>
+            </action>
+            <action method="addCss">
+                <stylesheet>reload_seo/css/product.css</stylesheet>
             </action>
         </reference>
     </adminhtml_catalog_category_edit>
