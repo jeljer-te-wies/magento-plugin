@@ -10,6 +10,63 @@
 class Reload_Seo_Model_Observer
 {
 	/**
+	 * catalogProductLoadAfter is called at the catalog_product_load_after event.
+	 * 
+	 * @param  Varien_Event_Observer $observer
+	 * @return void
+	 */
+	public function catalogProductLoadAfter($observer)
+	{
+		$this->_registerScore($observer->getProduct()->getId(), 'product', $observer->getProduct());
+	}
+
+	/**
+	 * catalogCategoryLoadAfter is called at the catalog_category_load_after event.
+	 * 
+	 * @param  Varien_Event_Observer $observer
+	 * @return void
+	 */
+	public function catalogCategoryLoadAfter($observer)
+	{
+		$this->_registerScore($observer->getCategory()->getId(), 'category', $observer->getCategory());
+	}
+
+	/**
+	 * _registerScore registers the score object for a category or a product.
+	 * 
+	 * @param  int $referenceId
+	 * @param  string $type
+	 * @param  Mage_Catalog_Model_Product|Mage_Catalog_Model_Category $observerObject
+	 * @return void
+	 */
+	protected function _registerScore($referenceId, $type, $observerObject)
+	{
+		//If the reference === null, we want to load the 0 object.
+		if($referenceId === null)
+		{
+			$referenceId = 0;
+		}
+
+		//Load the score from the database where the reference_id and type matches.
+		$scoreObject = Mage::getModel('reload_seo/score')->loadById($referenceId, $type);
+		if($scoreObject == null)
+		{
+			$scoreObject = Mage::getModel('reload_seo/score');
+		}
+
+		$observerObject->setScoreObject($scoreObject);
+		$observerObject->setReloadSeoKeywords($scoreObject->getKeywords());
+		$observerObject->setAttributeDefaultValue('reload_seo_keywords', $scoreObject->getDefaultKeywords());
+
+		if($scoreObject->getKeywords() != null  && $scoreObject->getKeywords() != $scoreObject->getDefaultKeywords())
+		{
+			$observerObject->setExistsStoreValueFlag('reload_seo_keywords');
+		}
+
+		Mage::register('seo_score', $scoreObject);
+	}
+
+	/**
 	 * catalogCategoryDeleteAfter is called at the catalog_category_delete_after event.
 	 * 
 	 * @param  Varien_Event_Observer $observer
@@ -57,10 +114,20 @@ class Reload_Seo_Model_Observer
 	 */
 	public function catalogProductSaveAfter($observer)
 	{
-		$keywords = Mage::app()->getRequest()->getParam('reload_seo_keywords');
+		$post = Mage::app()->getRequest()->getPost('product');
 		try
 		{
-			Mage::getModel('reload_seo/score')->loadById($observer->getProduct()->getId(), 'product')->setKeywords($keywords)->save();
+			if($post != null)
+			{
+				if(array_key_exists('reload_seo_keywords', $post))
+				{
+					Mage::getModel('reload_seo/score')->loadById($observer->getProduct()->getId(), 'product')->setKeywords($post['reload_seo_keywords'])->save();
+				}
+				else
+				{
+					Mage::getModel('reload_seo/score')->loadById($observer->getProduct()->getId(), 'product')->setKeywords('')->save();
+				}
+			}
 		}
 		catch(Exception $ex)
 		{
@@ -77,10 +144,20 @@ class Reload_Seo_Model_Observer
 	 */
 	public function catalogCategorySaveAfter($observer)
 	{
-		$keywords = Mage::app()->getRequest()->getParam('reload_seo_keywords');
+		$post = Mage::app()->getRequest()->getPost('general');
 		try
 		{
-			Mage::getModel('reload_seo/score')->loadById($observer->getCategory()->getId(), 'category')->setKeywords($keywords)->save();
+			if($post != null)
+			{
+				if(array_key_exists('reload_seo_keywords', $post))
+				{
+					Mage::getModel('reload_seo/score')->loadById($observer->getCategory()->getId(), 'category')->setKeywords($post['reload_seo_keywords'])->save();
+				}
+				else
+				{
+					Mage::getModel('reload_seo/score')->loadById($observer->getCategory()->getId(), 'category')->setKeywords('')->save();
+				}
+			}
 		}
 		catch(Exception $ex)
 		{
@@ -276,6 +353,59 @@ class Reload_Seo_Model_Observer
 
 			//Store the complete html in the transport object.
 			$transport->setHtml($html);
+		}
+		elseif($block instanceof Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element && $block->getAttribute() != null)
+		{
+			//We want to add an fake attribute for the seo keywords.
+			$attribute = $block->getAttribute();
+
+			try
+			{
+				//The $attribute->getEntityType() function contains a Mage::throw.
+				if($attribute->getAttributeCode() === 'name' && $attribute->getEntityType() != null && ($attribute->getEntityType()->getEntityTypeCode() === 'catalog_product' || $attribute->getEntityType()->getEntityTypeCode() === 'catalog_category'))
+				{
+					$value = '';
+					if(Mage::registry('seo_score') != null)
+					{
+						//This is an edit action.
+						$scoreObject = Mage::registry('seo_score');
+						$value = $scoreObject->getKeywords();
+
+						//Update the product or category with the keywords, default keywords and if the defualt flag is set or not.
+						$block->getDataObject()->setReloadSeoKeywords($scoreObject->getKeywords());
+						$block->getDataObject()->setAttributeDefaultValue('reload_seo_keywords', $scoreObject->getDefaultKeywords());
+
+						if($scoreObject->getKeywords() != null  && $scoreObject->getKeywords() != $scoreObject->getDefaultKeywords())
+						{
+							$block->getDataObject()->setExistsStoreValueFlag('reload_seo_keywords');
+						}
+					}
+
+					$html = $transport->getHtml();
+
+					//Clone the attribute 
+					$keywordsAttribute = clone $attribute;
+					$keywordsAttribute->setAttributeCode('reload_seo_keywords');
+
+					$keywordsElement = new Varien_Data_Form_Element_Text(array(
+						'label' => 'SEO keywords',
+						'html_id' => 'reload_seo_keywords',
+						'name' => 'reload_seo_keywords',
+						'class' => 'input-text reload-seo-keywords-field',
+						'entity_attribute' => $keywordsAttribute,
+						'value' => $value
+					));
+
+					$keywordsElement->setForm($block->getElement()->getForm());
+
+					$html .= $block->render($keywordsElement);
+					$transport->setHtml($html);
+				}
+			}
+			catch(Exception $ex)
+			{
+
+			}			
 		}
 	}
 }

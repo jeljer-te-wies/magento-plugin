@@ -57,6 +57,24 @@
             </reload_seo_setup>
         </resources>
         <events>
+            <catalog_product_load_after>
+                <observers>
+                    <reload_seo>
+                        <type>singleton</type>
+                        <class>reload_seo/observer</class>
+                        <method>catalogProductLoadAfter</method>
+                    </reload_seo>
+                </observers>
+            </catalog_product_load_after>
+            <catalog_category_load_after>
+                <observers>
+                    <reload_seo>
+                        <type>singleton</type>
+                        <class>reload_seo/observer</class>
+                        <method>catalogCategoryLoadAfter</method>
+                    </reload_seo>
+                </observers>
+            </catalog_category_load_after>
             <catalog_product_delete_after>
                 <observers>
                     <reload_seo>

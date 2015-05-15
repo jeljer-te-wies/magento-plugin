@@ -38,13 +38,9 @@ if($this->getScore() != null) {
 reloadseo.url = '<?php echo $this->getUrl('reload_seo/adminhtml_seo/ajax', array('type' => $this->getScore()->getType(), 'reference' => $this->getScore()->getReferenceId())); ?>';
 reloadseo.type = '<?php echo $this->getScore()->getType(); ?>';
 
-reloadseo.vars.current_keywords = '<?php echo $this->getScore()->getKeywords(); ?>';
 reloadseo.vars.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.vars.field_mapping = <?php echo json_encode($fieldMapping); ?>;
 reloadseo.vars.form_key = '<?php echo Mage::getSingleton('core/session')->getFormKey(); ?>';
-reloadseo.vars.translations = {
-	seo_keywords: '<?php echo Mage::helper('reload_seo')->__('SEO keywords'); ?>'
-};
 
 reloadseo.init();
 </script>

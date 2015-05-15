@@ -60,7 +60,9 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
             $score = Mage::getModel('reload_seo/score');
         }
 
-        if($score->getKeywords() == null && $score->getStoreId() != 0)
+        $score->setDefaultKeywords($score->getKeywords());
+
+        if($score->getStoreId() != 0)
         {
             $defaultScore = $this->getCollection()
                 ->addFieldToFilter('type', array('eq' => $type))
@@ -70,7 +72,12 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
 
             if($defaultScore != null)
             {
-                $score->setKeywords($defaultScore->getKeywords());
+                $score->setDefaultKeywords($defaultScore->getKeywords());
+
+                if($score->getKeywords() == null)
+                {
+                    $score->setKeywords($defaultScore->getKeywords());
+                }
             }
         }
 

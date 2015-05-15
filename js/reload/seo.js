@@ -83,30 +83,20 @@ var reloadseo = {
 
 		if($reloadseo('#media_gallery_content_grid').length)
 		{
-			//Bid all input fields in the images grid to reload the seo results on change.
+			//Bind all input fields in the images grid to reload the seo results on change.
 			$reloadseo('#media_gallery_content_grid').on('keyup', 'input', function() 
 			{ 
 				self.updateSeo();
 			});
 		}
 
-		if(self.type === 'product')
-		{
-			var nameRow = $reloadseo('#name').parents('tr').first();
-		}
-		else
-		{
-			var nameRow = $reloadseo("input[name='general[name]']").first().parents('tr').first();
-		}
-
-		var row = $reloadseo('<tr><td class="label"><label for="reload_seo_keywords">' + self.vars.translations.seo_keywords + '</label></td><td class="value"><input id="reload_seo_keywords" name="reload_seo_keywords" class="track-seo" value="' + self.vars.current_keywords + '" type="text"></td><td class="scope-label"></td></tr>');
-		row.find('input').first().data('track-field', 'keywords');
+		//Prepare the seo keywords field
+		$reloadseo('input.reload-seo-keywords-field').data('track-field', 'keywords');
+		$reloadseo('input.reload-seo-keywords-field').addClass('track-seo');
 
 		if(self.vars.type === 'product') {
 			$reloadseo("[name='product[sku]']").addClass('track-seo').data('track-field', 'sku');
 		}
-
-		row.insertAfter(nameRow);
 
 		//Loop over the field mapping and add the class track-seo to all fields which belong to the field mapping.
 		//Put the external field name in the data-track-field attribute.
@@ -142,14 +132,14 @@ var reloadseo = {
 		//Collect the initial data.
 		self.data = self.collectData();
 
-		$reloadseo('#reload_seo_keywords').select2({
+		$reloadseo('input.reload-seo-keywords-field').select2({
 			tags: true,
 			placeholder: '',
 			tokenSeparators: [","],
 			minimumInputLength: 1,
 			maximumSelectionLength: 2,
 			initSelection : function (element, callback) {
-				var asString = $reloadseo('#reload_seo_keywords').val();
+				var asString = $reloadseo('input.reload-seo-keywords-field').val();
 				var data = [];
 				$reloadseo.each(asString.split(','), function(k, v)
 				{
@@ -172,7 +162,7 @@ var reloadseo = {
 		        		
 		        	});
 		        	
-		        	var input = $reloadseo('#reload_seo_keywords').data().select2.search.val();
+		        	var input = $reloadseo('input.reload-seo-keywords-field').data().select2.search.val();
 		        	$reloadseo.each(input.split(','), function(k, v)
 					{
 							items[v.toLowerCase()] = v.toLowerCase();

@@ -63,21 +63,28 @@ class Reload_Seo_Block_Adminhtml_Seo extends Mage_Adminhtml_Block_Template
 				$type = 'category';
 			}
 
-			//If the reference === null, we want to load the 0 object.
-			if($referenceId === null)
+			if(Mage::registry('seo_score') != null && Mage::registry('seo_score')->getId() == $referenceId)
 			{
-				$referenceId = 0;
+				$this->_score = Mage::registry('seo_score');
 			}
-
-			//Load the score from the database where the reference_id and type matches.
-			$this->_score = Mage::getModel('reload_seo/score')->loadById($referenceId, $type);
-
-			if($this->_score == null || $this->_score->getReferenceId() != $referenceId)
+			else
 			{
-				//No score object was found.
-				$this->_score = null;
-			}
+				//If the reference === null, we want to load the 0 object.
+				if($referenceId === null)
+				{
+					$referenceId = 0;
+				}
 
+				//Load the score from the database where the reference_id and type matches.
+				$this->_score = Mage::getModel('reload_seo/score')->loadById($referenceId, $type);
+
+				if($this->_score == null || $this->_score->getReferenceId() != $referenceId)
+				{
+					//No score object was found.
+					$this->_score = null;
+				}
+			}
+			
 			$this->_scoreLoaded = true;
 		}
 		return $this->_score;
