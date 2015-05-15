@@ -179,6 +179,26 @@ var reloadseo = {
 		        },
 			}
 		});
+
+		if(typeof reloadseoSnippet !== 'undefined')
+		{
+			var metaTitleField = $reloadseo('.track-seo').filter(function()
+			{
+				return ($reloadseo(this).data('track-field') === 'meta_title');
+			}).first();
+
+			var metaDescriptionField = $reloadseo('.track-seo').filter(function()
+			{
+				return ($reloadseo(this).data('track-field') === 'meta_description');
+			}).first();
+
+			if(metaTitleField.length && metaDescriptionField.length)
+			{
+				reloadseoSnippet.init();
+				reloadseoSnippet.updateSnippet(metaTitleField.val(), 'title');
+				reloadseoSnippet.updateSnippet(metaDescriptionField.val(), 'description');
+			}
+		}
 	},
 
 	toggle: function()
@@ -254,6 +274,28 @@ var reloadseo = {
 				changed = true;
 			}
 		});
+
+		if(changed)
+		{
+			if(typeof reloadseoSnippet !== 'undefined')
+			{
+				var metaTitleField = $reloadseo('.track-seo').filter(function()
+				{
+					return ($reloadseo(this).data('track-field') === 'meta_title');
+				}).first();
+
+				var metaDescriptionField = $reloadseo('.track-seo').filter(function()
+				{
+					return ($reloadseo(this).data('track-field') === 'meta_description');
+				}).first();
+
+				if(metaTitleField.length && metaDescriptionField.length)
+				{
+					reloadseoSnippet.updateSnippet(metaTitleField.val(), 'title');
+					reloadseoSnippet.updateSnippet(metaDescriptionField.val(), 'description');
+				}
+			}
+		}
 
 		if(changed && 'status' in data)
 		{

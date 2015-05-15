@@ -21,8 +21,11 @@
             <action method="addJs">
                 <script>reload/seo.js</script>
             </action>
+            <action method="addJs">
+                <script>reload/snippet.js</script>
+            </action>
             <action method="addCss">
-                <stylesheet>reload_seo/css/product.css</stylesheet>
+                <stylesheet>reload_seo/css/seo.css</stylesheet>
             </action>
         </reference>
         <reference name="content">
@@ -49,8 +52,11 @@
             <action method="addJs">
                 <script>reload/seo.js</script>
             </action>
+            <action method="addJs">
+                <script>reload/snippet.js</script>
+            </action>
             <action method="addCss">
-                <stylesheet>reload_seo/css/product.css</stylesheet>
+                <stylesheet>reload_seo/css/seo.css</stylesheet>
             </action>
         </reference>
         <reference name="content">
@@ -78,7 +84,7 @@
                 <script>reload/seo.js</script>
             </action>
             <action method="addCss">
-                <stylesheet>reload_seo/css/product.css</stylesheet>
+                <stylesheet>reload_seo/css/seo.css</stylesheet>
             </action>
         </reference>
     </adminhtml_catalog_category_edit>
