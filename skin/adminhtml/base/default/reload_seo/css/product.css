@@ -142,3 +142,13 @@ body.hide-seo-results #content.main-col > .main-col-inner > div#category-edit-co
 {
 	min-width: 200px;
 }
+
+.base-score > .messages
+{
+	display: none;
+}
+
+body.hide-seo-results .base-score > .messages
+{
+	display: none !important;
+}

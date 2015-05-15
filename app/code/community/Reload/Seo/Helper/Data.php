@@ -124,115 +124,139 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
 
         $useNameAsDefaultKeywords = Mage::getStoreConfig('reload/reload_seo_group/reload_seo_title_default');
 
+        $hasDisabledProducts = false;
+        $hasEnabledProducts = false;
+
         //Loop over all the products.
         foreach($productCollection as $product)
         {
-            $sku = $product->getSku();
-
-            //Add the SKU to the data array.
-            $data[] = http_build_query(array('products[]sku' => $sku));
-
-            if(array_key_exists($product->getId(), $scoresByProductId))
+            if($product->getStatus() == 2)
             {
-                $score = $scoresByProductId[$product->getId()];
-                if($useNameAsDefaultKeywords && $score->getKeywords() == null)
+                $hasDisabledProducts = true;
+            }
+            else
+            {
+                $hasEnabledProducts = true;
+
+                $sku = $product->getSku();
+
+                //Add the SKU to the data array.
+                $data[] = http_build_query(array('products[]sku' => $sku));
+
+                if(array_key_exists($product->getId(), $scoresByProductId))
                 {
-                    $score->generateKeywords($product->getName());
-                }
-
-                if($score->getKeywords() == null && $storeId > 0)
-                {
-                    $defaultScore = Mage::getModel('reload_seo/score')->getCollection()
-                        ->addFieldToFilter('type', array('eq' => $score->getType()))
-                        ->addFieldToFilter('reference_id', array('eq' => $score->getReferenceId()))
-                        ->addFieldToFilter('store_id', array('eq' => 0))
-                        ->getFirstItem();
-
-                    if($defaultScore != null)
-                    {
-                        $score->setKeywords($defaultScore->getKeywords());
-                    }
-                }
-
-                $data[] = http_build_query(array('products[]keywords' => $score->getKeywords()));
-            }
-            elseif($useNameAsDefaultKeywords)
-            {
-                $data[] = http_build_query(array('products[]keywords' => $product->getName()));
-            }
-
-            $data[] = http_build_query(array('products[]store_id' => $product->getStoreId()));
-
-            foreach($fieldMapping as $external => $internal)
-            {
-                //Obtain all the field names and data and append them to the data array.
-                if($product->getData($internal) != null)
-                {
-                    $data[] = http_build_query(array('products[]' . $external => $product->getData($internal)));
-                }
-            }
-
-            $images = array();
-            foreach($product->getMediaGalleryImages() as $image)
-            {
-                $images[] = array(
-                    'url' => $image->getUrl(),
-                    'name' => $image->getLabel(),
-                );
-            }
-            if(count($images) > 0)
-            {
-                $data[] = http_build_query(array('products[]images[]' => $images));
-            }
-        }
-
-        //Build the url for the mass update.
-        $url = $this->url . $this->version . 'seo/index?' . http_build_query(
-            array(
-                'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
-                'language' => Mage::app()->getLocale()->getLocaleCode(),
-                'type' => 'product',
-                'framework' => 'magento',
-                'website' => Mage::getBaseUrl(),
-            )
-        );
-        //Execute the request.
-        $results = $this->executeCurlRequest($url, implode('&', $data), true);
-
-        if($results === null)
-        {
-            //Something went wrong.
-            throw new Exception($this->__('Something went wrong while updating the product SEO statusses.'));
-        }
-
-        //Sort the results by the sku's.
-        $resultsBySku = array();
-        foreach($results as $result)
-        {
-            $resultsBySku[$result['sku']] = $result;
-        }
-
-        try
-        {
-            //Loop over all products and get the result for each product.
-            foreach($productCollection as $product)
-            {
-                if(array_key_exists($product->getSku(), $resultsBySku))
-                {
-                    //Load the score object or create it if it doesn't exist and merge the results into the object.
-                    $score = Mage::getModel('reload_seo/score')->loadById($product->getId(), 'product');
+                    $score = $scoresByProductId[$product->getId()];
                     if($useNameAsDefaultKeywords && $score->getKeywords() == null)
                     {
                         $score->generateKeywords($product->getName());
                     }
-                    $score->mergeFromResult($resultsBySku[$product->getSku()]);
+
+                    if($score->getKeywords() == null && $storeId > 0)
+                    {
+                        $defaultScore = Mage::getModel('reload_seo/score')->getCollection()
+                            ->addFieldToFilter('type', array('eq' => $score->getType()))
+                            ->addFieldToFilter('reference_id', array('eq' => $score->getReferenceId()))
+                            ->addFieldToFilter('store_id', array('eq' => 0))
+                            ->getFirstItem();
+
+                        if($defaultScore != null)
+                        {
+                            $score->setKeywords($defaultScore->getKeywords());
+                        }
+                    }
+
+                    $data[] = http_build_query(array('products[]keywords' => $score->getKeywords()));
+                }
+                elseif($useNameAsDefaultKeywords)
+                {
+                    $data[] = http_build_query(array('products[]keywords' => $product->getName()));
+                }
+
+                $data[] = http_build_query(array('products[]store_id' => $product->getStoreId()));
+
+                foreach($fieldMapping as $external => $internal)
+                {
+                    //Obtain all the field names and data and append them to the data array.
+                    if($product->getData($internal) != null)
+                    {
+                        $data[] = http_build_query(array('products[]' . $external => $product->getData($internal)));
+                    }
+                }
+
+                $images = array();
+                foreach($product->getMediaGalleryImages() as $image)
+                {
+                    $images[] = array(
+                        'url' => $image->getUrl(),
+                        'name' => $image->getLabel(),
+                    );
+                }
+                if(count($images) > 0)
+                {
+                    $data[] = http_build_query(array('products[]images[]' => $images));
                 }
             }
         }
-        catch(Exception $ex)
+
+        if($hasEnabledProducts)
         {
-            //Something went wrong while saving the results.
-            throw new Exception($this->__('Something went wrong while processing the product SEO results.'));
+            //Build the url for the mass update.
+            $url = $this->url . $this->version . 'seo/index?' . http_build_query(
+                array(
+                    'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
+                    'language' => Mage::app()->getLocale()->getLocaleCode(),
+                    'type' => 'product',
+                    'framework' => 'magento',
+                    'website' => Mage::getBaseUrl(),
+                )
+            );
+            //Execute the request.
+            $results = $this->executeCurlRequest($url, implode('&', $data), true);
+
+            if($results === null)
+            {
+                //Something went wrong.
+                throw new Exception($this->__('Something went wrong while updating the product SEO statusses.'));
+            }
+
+            //Sort the results by the sku's.
+            $resultsBySku = array();
+            foreach($results as $result)
+            {
+                $resultsBySku[$result['sku']] = $result;
+            }
+
+            try
+            {
+                //Loop over all products and get the result for each product.
+                foreach($productCollection as $product)
+                {
+                    if(array_key_exists($product->getSku(), $resultsBySku))
+                    {
+                        //Load the score object or create it if it doesn't exist and merge the results into the object.
+                        $score = Mage::getModel('reload_seo/score')->loadById($product->getId(), 'product');
+                        if($useNameAsDefaultKeywords && $score->getKeywords() == null)
+                        {
+                            $score->generateKeywords($product->getName());
+                        }
+                        $score->mergeFromResult($resultsBySku[$product->getSku()]);
+                    }
+                }
+            }
+            catch(Exception $ex)
+            {
+                //Something went wrong while saving the results.
+                throw new Exception($this->__('Something went wrong while processing the product SEO results.'));
+            }
+
+            if($hasDisabledProducts)
+            {
+                Mage::getSingleton('adminhtml/session')->addNotice($this->__('Some selected products are disabled and were not updated, only enabled products will be updated.'));
+            }
+        }
+        else
+        {
+            throw new Exception($this->__('Only enabled products will be updated, please select enabled products.'));
         }
     }
 

@@ -14,6 +14,15 @@ if($this->getScore() != null) {
 <div id="reload-seo-scores" class="reload-seo-scores">
 	<div class="seo-results">
 		<div class="base-score seo-box">
+			<ul class="messages" <?php if($this->showDisabledMessage()) { echo 'style="display: block;"'; } ?>>
+				<li class="notice-msg">
+					<ul>
+						<li>
+							<span><?php echo Mage::helper('reload_seo')->__('This product has been disabled, the SEO-score will not be calculated.'); ?></span>
+						</li>
+					</ul>
+				</li>
+			</ul>
 			<p><?php echo Mage::helper('reload_seo')->__('Based on our information we have calculated the following SEO-score:'); ?></p>
 			<span class="seo-score" style="background-color: <?php echo $this->getScore()->getColor(); ?>;"><?php echo $this->getScore()->getScore(); ?></span>
 			<button type="button" class="seo-toggle-button">Hide</button>

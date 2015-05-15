@@ -255,7 +255,19 @@ var reloadseo = {
 			}
 		});
 
-		if(changed)
+		if(changed && 'status' in data)
+		{
+			if(data.status == 2)
+			{
+				$reloadseo('.base-score > .messages').slideDown(200);
+			}
+			else
+			{
+				$reloadseo('.base-score > .messages').slideUp(200);
+			}
+		}
+
+		if(changed && 'status' in data && data.status != 2)
 		{
 			//Changes were made, abort the current request.
 			if(self.currentRequest !== null)

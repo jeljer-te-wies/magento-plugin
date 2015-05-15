@@ -277,6 +277,13 @@ class Reload_Seo_Model_Observer
 					//This is a new product without an attribute set yet, so do nothing.
 					return;
 				}
+
+				if($item->getStatus() == 2)
+				{
+					//If the product has been disabled, do not check it.
+					Mage::getSingleton('adminhtml/session')->addNotice(Mage::helper('reload_seo')->__('This product has been disabled, the SEO-score will not be calculated.'));
+					return;
+				}
 			}
 			else
 			{

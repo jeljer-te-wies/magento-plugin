@@ -55,7 +55,7 @@ class Reload_Seo_Adminhtml_SeoController extends Mage_Adminhtml_Controller_Actio
         catch(Exception $ex)
         {
             //Something went wrong, set the error message.
-            Mage::getSingleton('adminhtml/session')->addError('Something went wrong while updating the product SEO statusses.');
+            Mage::getSingleton('adminhtml/session')->addError($ex->getMessage());
         }
         return $this->_redirect('adminhtml/catalog_product/index');
     }
