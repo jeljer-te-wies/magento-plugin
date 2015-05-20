@@ -130,7 +130,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         //Loop over all the products.
         foreach($productCollection as $product)
         {
-            if($product->getStatus() == 2)
+            if(!$this->shouldProductBeChecked($product))
             {
                 $hasDisabledProducts = true;
             }
@@ -251,12 +251,12 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
 
             if($hasDisabledProducts)
             {
-                Mage::getSingleton('adminhtml/session')->addNotice($this->__('Some selected products are disabled and were not updated, only enabled products will be updated.'));
+                Mage::getSingleton('adminhtml/session')->addNotice($this->__('Some selected products are disabled or invisible and were not updated, only enabled products will be updated.'));
             }
         }
         else
         {
-            throw new Exception($this->__('Only enabled products will be updated, please select enabled products.'));
+            throw new Exception($this->__('Only enabled and visible products will be updated, please select enabled products.'));
         }
     }
 
@@ -614,5 +614,27 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             return null;
         }
         return $attributeCode;
+    }
+
+    public function shouldProductBeChecked($product)
+    {
+        if($product == null)
+        {
+            return false;
+        }
+
+        if($product instanceof Mage_Catalog_Model_Product)
+        {
+            if($product->getStatus() == 2)
+            {
+                return false;
+            }
+
+            if($product->getVisibility() == Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 }

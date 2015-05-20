@@ -92,6 +92,6 @@ class Reload_Seo_Block_Adminhtml_Seo extends Mage_Adminhtml_Block_Template
 
 	public function showDisabledMessage()
 	{
-		return ($this->isProductView() && Mage::registry('current_product')->getStatus() == 2);
+		return ($this->isProductView() && !Mage::helper('reload_seo')->shouldProductBeChecked(Mage::registry('current_product')));
 	}
 }

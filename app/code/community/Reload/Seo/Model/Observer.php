@@ -278,10 +278,10 @@ class Reload_Seo_Model_Observer
 					return;
 				}
 
-				if($item->getStatus() == 2)
+				if(!Mage::helper('reload_seo')->shouldProductBeChecked($item))
 				{
 					//If the product has been disabled, do not check it.
-					Mage::getSingleton('adminhtml/session')->addNotice(Mage::helper('reload_seo')->__('This product has been disabled, the SEO-score will not be calculated.'));
+					Mage::getSingleton('adminhtml/session')->addNotice(Mage::helper('reload_seo')->__('This product has been disabled or is invisble, the SEO-score will not be calculated.'));
 					return;
 				}
 			}

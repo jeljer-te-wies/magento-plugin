@@ -96,6 +96,10 @@ var reloadseo = {
 
 		if(self.vars.type === 'product') {
 			$reloadseo("[name='product[sku]']").addClass('track-seo').data('track-field', 'sku');
+			if($reloadseo("#visibility").length)
+			{
+				$reloadseo("#visibility").addClass('track-seo');
+			}
 		}
 
 		//Loop over the field mapping and add the class track-seo to all fields which belong to the field mapping.
@@ -252,6 +256,12 @@ var reloadseo = {
 		}
 		data['images'] = images;
 
+		var visibilitySelect = $reloadseo('#visibility');
+		if(visibilitySelect.length)
+		{
+			data['visibility'] = visibilitySelect.val();
+		}
+
 		return data;
 	},
 
@@ -267,15 +277,21 @@ var reloadseo = {
 		var data = self.collectData(replaceData);
 
 		var changed = false;
+		var metaChanged = false;
 		$reloadseo.each(data, function(k, v)
 		{
 			if(self.data[k] != v)
 			{
 				changed = true;
+
+				if(k == 'meta_title' || k == 'meta_description')
+				{
+					metaChanged = true;
+				}
 			}
 		});
 
-		if(changed)
+		if(metaChanged)
 		{
 			if(typeof reloadseoSnippet !== 'undefined')
 			{
@@ -297,61 +313,69 @@ var reloadseo = {
 			}
 		}
 
-		if(changed && 'status' in data)
+		if(changed)
 		{
-			if(data.status == 2)
+			var shouldCheck = true;
+			if('status' in data && data.status == 2)
+			{
+				shouldCheck = false;
+			}
+
+			if('visibility' in data && data.visibility == self.vars.invisble_value)
+			{
+				shouldCheck = false;
+			}
+
+			if(!shouldCheck)
 			{
 				$reloadseo('.base-score > .messages').slideDown(200);
 			}
 			else
 			{
 				$reloadseo('.base-score > .messages').slideUp(200);
-			}
-		}
 
-		if(changed && 'status' in data && data.status != 2)
-		{
-			//Changes were made, abort the current request.
-			if(self.currentRequest !== null)
-			{
-				self.currentRequest.abort();
-			}
-			self.data = data;
-
-			//Obtain the form key.
-			data.form_key = self.vars.form_key;
-
-			//Make the AJAX request.
-			self.currentRequest = $reloadseo.ajax({
-				url: self.url,
-				type: 'post',
-				data: data,
-				dataType: 'json'
-			}).done(function(data)
-			{
-				if(data != null && 'score' in data)
+				//Changes were made, abort the current request.
+				if(self.currentRequest !== null)
 				{
-					//Only do something when the data was valid.
-					var elements = $reloadseo('.reload-seo-scores');
-
-					elements.each(function()
-					{
-						var element = jQuery(this);
-						//Set the basic score value and color.
-						element.find('.base-score>span.seo-score').first().text(data.score.toString());
-						element.find('.base-score>span.seo-score').first().css('background-color', data.color);
-
-						//Remove all current rules.
-						element.find('.seo-rules>table>tbody>tr.seo-rule').remove();
-						var tbodyElement = element.find('.seo-rules>table>tbody').first();
-						$reloadseo.each(data.rules, function(k, v)
-						{
-							//Loop over the rules and create html rows.
-							tbodyElement.append($reloadseo("<tr class='seo-rule'><td class='indicator'><div class='indicator-dot' style='background-color: " + v.color + ";'></div></td><td>" + v.title + "</td></tr>"));
-						});
-					});
+					self.currentRequest.abort();
 				}
-			});
+				self.data = data;
+
+				//Obtain the form key.
+				data.form_key = self.vars.form_key;
+
+				//Make the AJAX request.
+				self.currentRequest = $reloadseo.ajax({
+					url: self.url,
+					type: 'post',
+					data: data,
+					dataType: 'json'
+				}).done(function(data)
+				{
+					if(data != null && 'score' in data)
+					{
+						//Only do something when the data was valid.
+						var elements = $reloadseo('.reload-seo-scores');
+
+						elements.each(function()
+						{
+							var element = jQuery(this);
+							//Set the basic score value and color.
+							element.find('.base-score>span.seo-score').first().text(data.score.toString());
+							element.find('.base-score>span.seo-score').first().css('background-color', data.color);
+
+							//Remove all current rules.
+							element.find('.seo-rules>table>tbody>tr.seo-rule').remove();
+							var tbodyElement = element.find('.seo-rules>table>tbody').first();
+							$reloadseo.each(data.rules, function(k, v)
+							{
+								//Loop over the rules and create html rows.
+								tbodyElement.append($reloadseo("<tr class='seo-rule'><td class='indicator'><div class='indicator-dot' style='background-color: " + v.color + ";'></div></td><td>" + v.title + "</td></tr>"));
+							});
+						});
+					}
+				});
+			}
 		}
 	},
 

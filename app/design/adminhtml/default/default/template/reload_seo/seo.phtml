@@ -74,7 +74,7 @@ if($this->getScore() != null) {
 				<li class="notice-msg">
 					<ul>
 						<li>
-							<span><?php echo Mage::helper('reload_seo')->__('This product has been disabled, the SEO-score will not be calculated.'); ?></span>
+							<span><?php echo Mage::helper('reload_seo')->__('This product has been disabled or is invisble, the SEO-score will not be calculated.'); ?></span>
 						</li>
 					</ul>
 				</li>
@@ -106,6 +106,7 @@ reloadseo.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.vars.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.vars.field_mapping = <?php echo json_encode($fieldMapping); ?>;
 reloadseo.vars.form_key = '<?php echo Mage::getSingleton('core/session')->getFormKey(); ?>';
+reloadseo.vars.invisble_value = <?php echo Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE; ?>;
 
 reloadseo.init();
 </script>
