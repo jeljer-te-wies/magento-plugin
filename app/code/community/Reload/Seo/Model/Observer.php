@@ -63,6 +63,11 @@ class Reload_Seo_Model_Observer
 			$observerObject->setExistsStoreValueFlag('reload_seo_keywords');
 		}
 
+		if(Mage::registry('seo_score') != null)
+		{
+			Mage::unregister('seo_score');
+		}
+
 		Mage::register('seo_score', $scoreObject);
 	}
 
