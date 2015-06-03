@@ -1,5 +1,5 @@
 # Module
-app/code/community/Reload/* app/code/community/Reload/ 
+app/code/community/Reload/* app/code/community/Reload/
 app/design/adminhtml/default/default/layout/reload_seo.xml app/design/adminhtml/default/default/layout/reload_seo.xml
 app/design/adminhtml/default/default/template/reload_seo/seo.phtml app/design/adminhtml/default/default/template/reload_seo/seo.phtml
 app/etc/modules/Reload_Seo.xml app/etc/modules/Reload_Seo.xml
@@ -8,3 +8,5 @@ app/locale/nl_NL/Reload_Seo.csv app/locale/nl_NL/Reload_Seo.csv
 # Javascript
 js/reload/* js/reload/
 
+# CSS
+skin/adminhtml/base/default/reload_seo/css/seo.css skin/adminhtml/base/default/reload_seo/css/seo.css
