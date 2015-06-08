@@ -128,7 +128,8 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         $scoreCollection = Mage::getModel('reload_seo/score')
             ->getCollection()
             ->addFieldToFilter('type', array('eq' => 'product'))
-            ->addFieldToFilter('reference_id', array('in' => $productIds));
+            ->addFieldToFilter('reference_id', array('in' => $productIds))
+            ->addFieldToFilter('store_id', array('eq' => $storeId));
 
         foreach($scoreCollection as $score)
         {
