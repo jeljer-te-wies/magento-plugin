@@ -101,15 +101,18 @@ if($this->getScore() != null) {
 </div>
 <?php $fieldMapping = Mage::helper('reload_seo')->getFieldMappings($this->getScore()->getType()); ?>
 <script type="text/javascript">
-
+//Declare all required variables for using in the seo.js file.
 reloadseo.url = '<?php echo $this->getUrl('adminhtml/seo/ajax', array('type' => $this->getScore()->getType(), 'reference' => $this->getScore()->getReferenceId())); ?>';
+reloadseo.baseUrl = '<?php echo $this->getBaseShopUrl(); ?>';
 reloadseo.type = '<?php echo $this->getScore()->getType(); ?>';
+reloadseo.storeId = '<?php echo $this->getStoreId(); ?>';
 
 reloadseo.vars.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.vars.field_mapping = <?php echo json_encode($fieldMapping); ?>;
 reloadseo.vars.form_key = '<?php echo Mage::getSingleton('core/session')->getFormKey(); ?>';
 reloadseo.vars.invisble_value = <?php echo Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE; ?>;
 
+//Init the system.
 reloadseo.init();
 </script>
 <?php } ?>

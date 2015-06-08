@@ -8,22 +8,10 @@
  * Reload_Seo_Helper_Data is the helper class for this module, mostly it contains functions
  * to handle the request with the Reload API.
  */
-class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
+class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
 {
     /**
-     * Variable for storing the API url in.
-     * @var string
-     */
-	protected $url = 'http://api.reloadseo.com/api/';
-
-    /**
-     * Variable for storing the version in.
-     * @var string
-     */
-    protected $version = 'v1/';
-
-    /**
-     * Variable for keeping track of the possible urls.
+     * Variable for keeping track of the possible fields.
      * @var array
      */
     protected $fields = array(
@@ -36,247 +24,6 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         'url_key',
         'status',
     );
-
-    protected function buildUrl($action, $params = array())
-    {
-        $url = $this->url . $this->version . 'seo';
-
-        if($action != null)
-        {
-            $url .= '/' . $action;
-        }
-
-        if($params != null)
-        {
-            $url .= '?' . http_build_query($params);
-        }
-
-        return $url;
-    }
-
-    /**
-     * keyIsValid makes an API call to the Reload API to check if the API key is valid.
-     * 
-     * @return boolean
-     */
-    public function keyIsValid()
-    {
-        //Obtain the API key from the configuration and obtain the adminhtml session.
-        $apiKey = Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key');
-        $session = Mage::getSingleton('adminhtml/session');
-        if($session->getSeoApiKey() == $apiKey && (time() - $session->getSeoApiKeyCheckTime()) < 300)
-        {
-            //The check has already been made with this key and the check is not 5 minutes old yet, return the result.
-            return $session->getSeoApiKeyValid();
-        }
-
-        //Create the complete url and execute it.
-        $url = $this->buildUrl('validate_key', array('key' => $apiKey, 'website' => Mage::getBaseUrl()));
-        $result = $this->executeCurlRequest($url);
-        if($result === null)
-        {
-            //No result, something went wrong.
-            throw new Exception($this->__('Something went wrong while connection to our API.'));
-        }
-
-        $session->unsCustomSEOMessage();
-        $session->unsCustomSEOMessageType();
-
-        //Store the API key in the session.
-        $session->setSeoApiKey($apiKey);
-        $session->setSeoApiKeyCheckTime(time());
-
-        if(array_key_exists('message', $result) && array_key_exists('title', $result['message']) && array_key_exists('type', $result['message']) && $result['message']['title'] != null && $result['message']['type'] != null)
-        {
-            $session->setCustomSEOMessage(sprintf($result['message']['title'], Mage::helper("adminhtml")->getUrl('adminhtml/system_config/edit/section/reload')));
-            $session->setCustomSEOMessageType($result['message']['type']);
-        }
-
-        if(array_key_exists('key', $result) && $result['key'] == 'valid')
-        {
-            //The API key is valid, set the session flag and return true.
-            $session->setSeoApiKeyValid(true);
-            return true;
-        }
-        //The API key is not valid, set the session falg and return false.
-        $session->setSeoApiKeyValid(false);
-        return false;
-    }
-
-    /**
-     * updateProducts updates all prodcuts with the provided product ids.
-     * 
-     * @param  array $productIds
-     * @return void
-     */
-    public function updateProducts($productIds)
-    {
-        //Obtain all products were the entity_id is in the array.
-        $productCollection = Mage::getModel('catalog/product')->getCollection();
-
-        $storeId = (int) Mage::app()->getRequest()->getParam('store');
-        if($storeId > 0)
-        {
-            $productCollection->setStoreId($storeId);
-        }
-            
-        $productCollection = $productCollection
-            ->addAttributeToFilter('entity_id', array('in' => $productIds))
-            ->addAttributeToSelect('*');
-
-        $scoresByProductId = array();
-        $scoreCollection = Mage::getModel('reload_seo/score')
-            ->getCollection()
-            ->addFieldToFilter('type', array('eq' => 'product'))
-            ->addFieldToFilter('reference_id', array('in' => $productIds))
-            ->addFieldToFilter('store_id', array('eq' => $storeId));
-
-        foreach($scoreCollection as $score)
-        {
-            $scoresByProductId[$score->getReferenceId()] = $score;
-        }
-
-        //Obtain the field mapping for the products.
-        $fieldMapping = $this->getFieldMappings('product');
-        $data = array();
-
-        $useNameAsDefaultKeywords = Mage::getStoreConfig('reload/reload_seo_group/reload_seo_title_default');
-
-        $hasDisabledProducts = false;
-        $hasEnabledProducts = false;
-
-        //Loop over all the products.
-        foreach($productCollection as $product)
-        {
-            if(!$this->shouldProductBeChecked($product))
-            {
-                $hasDisabledProducts = true;
-            }
-            else
-            {
-                $hasEnabledProducts = true;
-
-                $sku = $product->getSku();
-
-                //Add the SKU to the data array.
-                $data[] = http_build_query(array('products[]sku' => $sku));
-
-                if(array_key_exists($product->getId(), $scoresByProductId))
-                {
-                    $score = $scoresByProductId[$product->getId()];
-                    if($useNameAsDefaultKeywords && $score->getKeywords() == null)
-                    {
-                        $score->generateKeywords($product->getName());
-                    }
-
-                    if($score->getKeywords() == null && $storeId > 0)
-                    {
-                        $defaultScore = Mage::getModel('reload_seo/score')->getCollection()
-                            ->addFieldToFilter('type', array('eq' => $score->getType()))
-                            ->addFieldToFilter('reference_id', array('eq' => $score->getReferenceId()))
-                            ->addFieldToFilter('store_id', array('eq' => 0))
-                            ->getFirstItem();
-
-                        if($defaultScore != null)
-                        {
-                            $score->setKeywords($defaultScore->getKeywords());
-                        }
-                    }
-
-                    $data[] = http_build_query(array('products[]keywords' => $score->getKeywords()));
-                }
-                elseif($useNameAsDefaultKeywords)
-                {
-                    $data[] = http_build_query(array('products[]keywords' => $product->getName()));
-                }
-
-                $data[] = http_build_query(array('products[]store_id' => $product->getStoreId()));
-
-                foreach($fieldMapping as $external => $internal)
-                {
-                    //Obtain all the field names and data and append them to the data array.
-                    if($product->getData($internal) != null)
-                    {
-                        $data[] = http_build_query(array('products[]' . $external => $product->getData($internal)));
-                    }
-                }
-
-                $images = array();
-                foreach($product->getMediaGalleryImages() as $image)
-                {
-                    $images[] = array(
-                        'url' => $image->getUrl(),
-                        'name' => $image->getLabel(),
-                    );
-                }
-                if(count($images) > 0)
-                {
-                    $data[] = http_build_query(array('products[]images[]' => $images));
-                }
-            }
-        }
-
-        if($hasEnabledProducts)
-        {
-            //Build the url for the mass update.
-            $url = $this->buildUrl('index', 
-                array(
-                    'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
-                    'language' => Mage::app()->getLocale()->getLocaleCode(),
-                    'type' => 'product',
-                    'framework' => 'magento',
-                    'website' => Mage::getBaseUrl(),
-                )
-            );
-            //Execute the request.
-            $results = $this->executeCurlRequest($url, implode('&', $data), true);
-
-            if($results === null)
-            {
-                //Something went wrong.
-                throw new Exception($this->__('Something went wrong while updating the product SEO statusses.'));
-            }
-
-            //Sort the results by the sku's.
-            $resultsBySku = array();
-            foreach($results as $result)
-            {
-                $resultsBySku[$result['sku']] = $result;
-            }
-
-            try
-            {
-                //Loop over all products and get the result for each product.
-                foreach($productCollection as $product)
-                {
-                    if(array_key_exists($product->getSku(), $resultsBySku))
-                    {
-                        //Load the score object or create it if it doesn't exist and merge the results into the object.
-                        $score = Mage::getModel('reload_seo/score')->loadById($product->getId(), 'product');
-                        if($useNameAsDefaultKeywords && $score->getKeywords() == null)
-                        {
-                            $score->generateKeywords($product->getName());
-                        }
-                        $score->mergeFromResult($resultsBySku[$product->getSku()]);
-                    }
-                }
-            }
-            catch(Exception $ex)
-            {
-                //Something went wrong while saving the results.
-                throw new Exception($this->__('Something went wrong while processing the product SEO results.'));
-            }
-
-            if($hasDisabledProducts)
-            {
-                Mage::getSingleton('adminhtml/session')->addNotice($this->__('Some selected products are disabled or invisible and were not updated, only enabled products will be updated.'));
-            }
-        }
-        else
-        {
-            throw new Exception($this->__('Only enabled and visible products will be updated, please select enabled products.'));
-        }
-    }
 
     /**
      * removeItem removes one product or category SEO status.
@@ -380,6 +127,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'product');
             $type = 'product';
 
+            //Append the image data.
             $data['product[images]'] = array();
             foreach($item->getMediaGalleryImages() as $image)
             {
@@ -427,6 +175,9 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $data['product[sku]'] = '0';
         }
 
+        //Add the store data.
+        $data['stores'] = $this->collectStores();
+
         //Execute the request.
         $result = $this->executeCurlRequest($url, $data);
         if($result === null || !array_key_exists('score', $result))
@@ -471,6 +222,8 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $preparedData['product['.$key.']'] = $value;
         }
 
+        $preparedData['stores'] = $this->collectStores();
+
         //Prepare the url for the call.
         $url = $this->buildUrl('show', 
             array(
@@ -478,7 +231,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
                 'language' => Mage::app()->getLocale()->getLocaleCode(),
                 'type' => $type,
                 'framework' => 'magento',
-                'website' => Mage::getBaseUrl(),
+                'website' => Mage::getBaseUrl()
             )
         );
 
@@ -491,104 +244,6 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         }
         //The call was successfull, return the result.
         return $result;
-    }
-
-    /**
-     * validConfig checks if the configuration is valid.
-     * 
-     * @return void
-     */
-    public function validConfig()
-    {
-        //Obtain the API key from the configuration.
-        $apiKey = Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key');
-
-        if($apiKey === null || strlen($apiKey) <= 0)
-        {
-            //The API key is not filled in, throw an exception.
-            throw new Exception($this->__("No API key given, please enter your API key in the <a href='%s'>configuration</a>.", Mage::helper("adminhtml")->getUrl('adminhtml/system_config/edit/section/reload')));
-        }
-
-        $session = Mage::getSingleton('adminhtml/session');
-        $keyIsValid = $this->keyIsValid();
-
-        if(!$keyIsValid && $session->getCustomSEOMessage() == null)
-        {
-            //The API key is not valid, and no message was provided.
-            throw new Exception($this->__("The given API key is invalid, please enter a valid API key in the <a href='%s'>configuration</a>.", Mage::helper("adminhtml")->getUrl('adminhtml/system_config/edit/section/reload')));
-        }
-        elseif($session->getCustomSEOMessage() != null)
-        {
-            //The API returned an message, let's add it to the session.
-            if($session->getCustomSEOMessageType() === 'notice')
-            {
-                $session->addNotice($session->getCustomSEOMessage());
-            }
-            elseif($session->getCustomSEOMessageType() === 'warning')
-            {
-                $session->addWarning($session->getCustomSEOMessage());
-            }
-            elseif($session->getCustomSEOMessageType() === 'error')
-            {
-                $session->addError($session->getCustomSEOMessage());
-            }
-            else
-            {
-                $session->addSuccess($session->getCustomSEOMessage());
-            }
-        }
-    }
-
-    /**
-     * exec executes an API call to the Reload API.
-     * 
-     * @param  string  $url
-     * @param  array|string  $postdata
-     * @param  boolean $postAsString If true, the $postdata is an string.
-     * @return array
-     */
-    protected function executeCurlRequest($url, $postdata = null, $postAsString = false, $isDelete = false)
-    {
-        //Obtain an curl handle.
-        $ch = curl_init($url);
-
-        //Tell the handle to wait for a response.
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-        if($postdata !== null)
-        {
-            //Set the handle to make an POST request.
-            curl_setopt($ch, CURLOPT_POST, 1);
-            if($postAsString)
-            {
-                //Set the post data
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
-            }
-            else
-            {
-                //Build the post data query and set it.
-                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postdata));
-            }
-            //Set the content type.
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
-        }
-        elseif($isDelete)
-        {
-            //Set the handle to make an DELETE request.
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-        }
-
-        //Execute the request and close the handle.
-        $result = curl_exec($ch);
-        curl_close($ch);
-
-        //Decode the result and return the value if successfull.
-        $result = json_decode($result, true);
-        if($result)
-        {
-            return $result;
-        }
-        return null;
     }
 
     /**
@@ -627,6 +282,37 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
     }
 
     /**
+     * shouldProductBeChecked checks if a product should be send to the api or not. (When the product is disabled or
+     * not visible, it should not be checked.)
+     * 
+     * @param  Varien_Object $product
+     * @return bool
+     */
+    public function shouldProductBeChecked($product)
+    {
+        if($product == null)
+        {
+            return false;
+        }
+
+        if($product instanceof Mage_Catalog_Model_Product)
+        {
+            if($product->getStatus() == 2)
+            {
+                //The product has been disabled explicit.
+                return false;
+            }
+
+            if($product->getVisibility() == Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE)
+            {
+                //The product is not visible.
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * getFieldAttributeCode loads the configured attribute code from the configuration.
      * 
      * @param  string $field
@@ -640,27 +326,5 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             return null;
         }
         return $attributeCode;
-    }
-
-    public function shouldProductBeChecked($product)
-    {
-        if($product == null)
-        {
-            return false;
-        }
-
-        if($product instanceof Mage_Catalog_Model_Product)
-        {
-            if($product->getStatus() == 2)
-            {
-                return false;
-            }
-
-            if($product->getVisibility() == Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 }

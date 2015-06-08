@@ -1,3 +1,13 @@
+/*
+ * @category   Reload
+ * @package    Reload_Seo
+ * @copyright  Copyright (c) 2013-2015 AndCode (http://www.andcode.nl)
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ *
+ * reloadseo contains the default functions for the seo result handling and such.
+ * 
+ */
+
 var reloadseo = {
 
     /**
@@ -209,6 +219,8 @@ var reloadseo = {
                 reloadseoSnippet.updateSnippet(metaDescriptionField.val(), 'description');
             }
         }
+
+        reloadseo.updateSnippetUrl();
     },
 
     toggle: function()
@@ -261,6 +273,7 @@ var reloadseo = {
             });
         }
         data['images'] = images;
+        data['store_id'] = reloadseo.storeId;
 
         var visibilitySelect = $reloadseo('#visibility');
         if(visibilitySelect.length)
@@ -278,6 +291,8 @@ var reloadseo = {
     updateSeo: function(replaceData)
     {
         var self = this;
+
+        self.updateSnippetUrl();
 
         //Collect the data and check if something changed.
         var data = self.collectData(replaceData);
@@ -383,6 +398,29 @@ var reloadseo = {
                         });
                     }
                 });
+            }
+        }
+    },
+
+    /**
+     * updateSnippetUrl updates the snippet url
+     * 
+     * @return void
+     */
+    updateSnippetUrl: function()
+    {
+        if(reloadseo.type === 'product')
+        {
+            var urlKeyField = $reloadseo('.track-seo').filter(function()
+            {
+                return ($reloadseo(this).data('track-field') === 'url_key');
+            }).first();
+
+            var snippetElement = $reloadseo('.url-snippet').first();
+
+            if(urlKeyField.length && snippetElement.length)
+            {
+                snippetElement.html(reloadseo.baseUrl + urlKeyField.val() + '<div class="action-menu"><span class="url-chevron"></span></div>');
             }
         }
     },

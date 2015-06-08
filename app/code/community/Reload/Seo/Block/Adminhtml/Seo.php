@@ -90,6 +90,37 @@ class Reload_Seo_Block_Adminhtml_Seo extends Mage_Adminhtml_Block_Template
 		return $this->_score;
 	}
 
+	public function getBaseShopUrl()
+	{
+		if($this->getIsProductView())
+		{
+			$store = Mage::app()->getStore(Mage::registry('current_product')->getStoreId());
+			if($store->isAdmin())
+			{
+				$stores = Mage::app()->getStores();
+				if(is_array($stores) && count($stores) > 0)
+				{
+					$store = array_pop(array_reverse($stores));
+				}
+			}
+
+			return str_replace('http://', '', $store->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_LINK));
+		}
+		return null;
+	}
+
+	public function getStoreId()
+	{
+		if($this->isProductView())
+		{
+			return Mage::registry('current_product')->getStoreId();
+		}
+		else
+		{
+			return Mage::registry('category')->getStoreId();
+		}
+	}
+
 	public function showDisabledMessage()
 	{
 		return ($this->isProductView() && !Mage::helper('reload_seo')->shouldProductBeChecked(Mage::registry('current_product')));

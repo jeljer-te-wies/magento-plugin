@@ -6,22 +6,26 @@
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */ -->
 <config>
+    <!-- Module declaration -->
     <modules>
         <Reload_Seo>
             <version>1.2.2</version>
         </Reload_Seo>
     </modules>
     <global>
+        <!-- Blocks -->
         <blocks>
             <reload_seo>
                 <class>Reload_Seo_Block</class>
             </reload_seo>
         </blocks>
+        <!-- Helpers -->
         <helpers>
             <reload_seo>
                 <class>Reload_Seo_Helper</class>
             </reload_seo>
         </helpers>
+        <!-- Models -->
         <models>
             <reload_seo>
                 <class>Reload_Seo_Model</class>
@@ -30,9 +34,11 @@
             <reload_seo_resource>
                 <class>Reload_Seo_Model_Resource</class>
                 <entities>
+                    <!-- The score model table reference -->
                     <score>
                         <table>reload_seo_score</table>
                     </score>
+                    <!-- The score rule model table reference -->
                     <scores_rule>
                         <table>reload_seo_scores_rule</table>
                     </scores_rule>
@@ -40,6 +46,7 @@
             </reload_seo_resource>
         </models>
         <resources>
+            <!-- The setup -->
             <reload_seo_setup>
                 <setup>
                     <module>Reload_Seo</module>
@@ -47,6 +54,7 @@
             </reload_seo_setup>
         </resources>
         <events>
+            <!-- All event observers -->
             <catalog_product_load_after>
                 <observers>
                     <reload_seo>
@@ -149,6 +157,7 @@
         </events>
     </global>
     <admin>
+        <!-- Admin router -->
         <routers>
             <adminhtml>
                 <args>
@@ -178,6 +187,7 @@
         </translate>
     </adminhtml>
     <default>
+        <!-- Default configuration -->
         <reload>
             <reload_seo_mappings>
                 <reload_seo_mapping_name>name</reload_seo_mapping_name>

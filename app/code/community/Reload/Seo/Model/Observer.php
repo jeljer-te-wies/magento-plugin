@@ -368,11 +368,11 @@ class Reload_Seo_Model_Observer
 		}
 		elseif($block instanceof Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element && $block->getAttribute() != null)
 		{
-			//We want to add an fake attribute for the seo keywords.
-			$attribute = $block->getAttribute();
-
 			try
 			{
+				//We want to add an fake attribute for the seo keywords.
+				$attribute = $block->getAttribute();
+
 				//The $attribute->getEntityType() function contains a Mage::throw.
 				if($attribute->getAttributeCode() === 'name' && $attribute->getEntityType() != null && ($attribute->getEntityType()->getEntityTypeCode() === 'catalog_product' || $attribute->getEntityType()->getEntityTypeCode() === 'catalog_category'))
 				{

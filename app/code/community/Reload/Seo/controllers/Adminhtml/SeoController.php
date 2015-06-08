@@ -47,7 +47,7 @@ class Reload_Seo_Adminhtml_SeoController extends Mage_Adminhtml_Controller_Actio
         try
         {
             //Call the helper to update the products with the given ids.
-            Mage::helper('reload_seo')->updateProducts($this->getRequest()->getParam('product'));
+            Mage::helper('reload_seo/massaction')->updateProducts($this->getRequest()->getParam('product'));
 
             //Set the success message.
             Mage::getSingleton('adminhtml/session')->addSuccess('The SEO statusses have been updated.');
