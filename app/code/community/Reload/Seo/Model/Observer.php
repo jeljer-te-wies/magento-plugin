@@ -329,7 +329,7 @@ class Reload_Seo_Model_Observer
 				//Add a mass action for updating the seo scores.
 				$massactions->addItem('mass_update_seo', array(
 	                'label' => Mage::helper('reload_seo')->__('Update SEO statusses'),
-	                'url'   => $block->getUrl('reload_seo/adminhtml_seo/updateproducts', array('_current'=>true))
+	                'url'   => $block->getUrl('adminhtml/seo/updateproducts', array('_current'=>true))
 	            ));
 			}
 		}

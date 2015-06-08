@@ -37,6 +37,23 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         'status',
     );
 
+    protected function buildUrl($action, $params = array())
+    {
+        $url = $this->url . $this->version . 'seo';
+
+        if($action != null)
+        {
+            $url .= '/' . $action;
+        }
+
+        if($params != null)
+        {
+            $url .= '?' . http_build_query($params);
+        }
+
+        return $url;
+    }
+
     /**
      * keyIsValid makes an API call to the Reload API to check if the API key is valid.
      * 
@@ -54,7 +71,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         //Create the complete url and execute it.
-        $url = $this->url . $this->version . 'seo/validate_key?' . http_build_query(array('key' => $apiKey, 'website' => Mage::getBaseUrl()));
+        $url = $this->buildUrl('validate_key', array('key' => $apiKey, 'website' => Mage::getBaseUrl()));
         $result = $this->executeCurlRequest($url);
         if($result === null)
         {
@@ -201,7 +218,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         if($hasEnabledProducts)
         {
             //Build the url for the mass update.
-            $url = $this->url . $this->version . 'seo/index?' . http_build_query(
+            $url = $this->buildUrl('index', 
                 array(
                     'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
                     'language' => Mage::app()->getLocale()->getLocaleCode(),
@@ -294,7 +311,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         //Create the url for the update.
-        $url = $this->url . $this->version . 'seo?' . http_build_query(
+        $url = $this->buildUrl('',
             array(
                 'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
                 'language' => Mage::app()->getLocale()->getLocaleCode(),
@@ -385,7 +402,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         //Create the url for the update.
-        $url = $this->url . $this->version . 'seo/show?' . http_build_query(
+        $url = $this->buildUrl('show',
             array(
                 'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
                 'language' => Mage::app()->getLocale()->getLocaleCode(),
@@ -446,7 +463,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
         }
 
         //Prepare the url for the call.
-        $url = $this->url . $this->version . 'seo/show?' . http_build_query(
+        $url = $this->buildUrl('show', 
             array(
                 'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
                 'language' => Mage::app()->getLocale()->getLocaleCode(),

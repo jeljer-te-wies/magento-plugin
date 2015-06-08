@@ -100,7 +100,7 @@ if($this->getScore() != null) {
 <?php $fieldMapping = Mage::helper('reload_seo')->getFieldMappings($this->getScore()->getType()); ?>
 <script type="text/javascript">
 
-reloadseo.url = '<?php echo $this->getUrl('reload_seo/adminhtml_seo/ajax', array('type' => $this->getScore()->getType(), 'reference' => $this->getScore()->getReferenceId())); ?>';
+reloadseo.url = '<?php echo $this->getUrl('adminhtml/seo/ajax', array('type' => $this->getScore()->getType(), 'reference' => $this->getScore()->getReferenceId())); ?>';
 reloadseo.type = '<?php echo $this->getScore()->getType(); ?>';
 
 reloadseo.vars.type = '<?php echo $this->getScore()->getType(); ?>';

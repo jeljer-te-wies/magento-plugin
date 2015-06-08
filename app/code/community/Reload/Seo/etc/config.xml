@@ -40,16 +40,6 @@
             </reload_seo_resource>
         </models>
         <resources>
-            <reload_seo_write>
-                <connection>
-                    <use>core_write</use>
-                </connection>
-            </reload_seo_write>
-            <reload_seo_read>
-                <connection>
-                    <use>core_read</use>
-                </connection>
-            </reload_seo_read>
             <reload_seo_setup>
                 <setup>
                     <module>Reload_Seo</module>
@@ -160,13 +150,13 @@
     </global>
     <admin>
         <routers>
-            <reload_seo>
-                <use>admin</use>
+            <adminhtml>
                 <args>
-                    <module>Reload_Seo</module>
-                    <frontName>reload_seo</frontName>
+                    <modules>
+                        <reload_seo before="Mage_Adminhtml">Reload_Seo_Adminhtml</reload_seo>
+                    </modules>
                 </args>
-            </reload_seo>
+            </adminhtml>
         </routers>
     </admin>
     <adminhtml>
