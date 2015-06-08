@@ -419,9 +419,5 @@ class Reload_Seo_Model_Observer
 
 			}			
 		}
-		elseif($block instanceof Mage_Adminhtml_Block_Catalog_Product_Edit_Tab_Attributes)
-		{
-			// var_dump($block->getData()); die();
-		}
 	}
 }
