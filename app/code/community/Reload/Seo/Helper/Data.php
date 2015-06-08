@@ -298,7 +298,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'category');
             $type = 'category';
         }
-        else
+        elseif($item instanceof Mage_Catalog_Model_Product)
         {
             //The item is a product, the sku will be used as is.
             $sku = $item->getSku();
@@ -309,6 +309,10 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             //Obtain the score object for later use.
             $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'product');
             $type = 'product';
+        }
+        else
+        {
+            Mage::throwException('The requested items is not a product nor a category.');
         }
 
         //Create the url for the update.
@@ -364,7 +368,7 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
             $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'category');
             $type = 'category';
         }
-        else
+        elseif($item instanceof Mage_Catalog_Model_Product)
         {
             //The item is a product, the sku will be used as is.
             $data['product[sku]'] = $item->getSku();
@@ -384,6 +388,10 @@ class Reload_Seo_Helper_Data extends Mage_Core_Helper_Abstract
                     'name' => $image->getLabel(),
                 );
             }
+        }
+        else
+        {
+            Mage::throwException('The requested items is not a product nor a category.');
         }
 
         if($score->getKeywords() == null && Mage::getStoreConfig('reload/reload_seo_group/reload_seo_title_default'))
