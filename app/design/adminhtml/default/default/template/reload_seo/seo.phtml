@@ -11,6 +11,7 @@
 if($this->getScore() != null) { 
 //Only show the html and javascript if the score object is not null.
 ?>
+<?php if($this->isProductView()) { ?>
 <div id="reload-snippet" style="display: none;">
 	<div class="entry-edit">
 		<div class="entry-edit-head">
@@ -66,6 +67,7 @@ if($this->getScore() != null) {
 		</div>
 	</div>
 </div>
+<?php } ?>
 
 <div id="reload-seo-scores" class="reload-seo-scores">
 	<div class="seo-results">

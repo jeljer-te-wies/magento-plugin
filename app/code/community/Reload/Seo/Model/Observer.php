@@ -400,7 +400,7 @@ class Reload_Seo_Model_Observer
 					$keywordsAttribute->setAttributeCode('reload_seo_keywords');
 
 					$keywordsElement = new Varien_Data_Form_Element_Text(array(
-						'label' => 'SEO keywords',
+						'label' => 'SEO keyword',
 						'html_id' => 'reload_seo_keywords',
 						'name' => 'reload_seo_keywords',
 						'class' => 'input-text reload-seo-keywords-field',
