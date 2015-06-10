@@ -215,7 +215,19 @@ var reloadseo = {
             if(metaTitleField.length && metaDescriptionField.length)
             {
                 reloadseoSnippet.init();
-                reloadseoSnippet.updateSnippet(metaTitleField.val(), 'title');
+
+                var metaTitle = metaTitleField.val();
+                if(reloadseo.titleSuffix.length > 0)
+                {
+                    metaTitle = metaTitle + ' ' + reloadseo.titleSuffix;
+                }
+
+                if(reloadseo.titlePrefix.length > 0)
+                {
+                     metaTitle = reloadseo.titlePrefix + ' ' + metaTitle;
+                }
+
+                reloadseoSnippet.updateSnippet(metaTitle, 'title');
                 reloadseoSnippet.updateSnippet(metaDescriptionField.val(), 'description');
             }
         }
@@ -328,7 +340,18 @@ var reloadseo = {
 
                 if(metaTitleField.length && metaDescriptionField.length)
                 {
-                    reloadseoSnippet.updateSnippet(metaTitleField.val(), 'title');
+                    var metaTitle = metaTitleField.val();
+                    if(reloadseo.titleSuffix.length > 0)
+                    {
+                        metaTitle = metaTitle + ' ' + reloadseo.titleSuffix;
+                    }
+
+                    if(reloadseo.titlePrefix.length > 0)
+                    {
+                         metaTitle = reloadseo.titlePrefix + ' ' + metaTitle;
+                    }
+
+                    reloadseoSnippet.updateSnippet(metaTitle, 'title');
                     reloadseoSnippet.updateSnippet(metaDescriptionField.val(), 'description');
                 }
             }
@@ -364,8 +387,6 @@ var reloadseo = {
 
                 //Obtain the form key.
                 data.form_key = self.vars.form_key;
-                
-                console.log(data.keywords);
 
                 //Make the AJAX request.
                 self.currentRequest = $reloadseo.ajax({

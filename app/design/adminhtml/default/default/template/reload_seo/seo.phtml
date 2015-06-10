@@ -106,6 +106,8 @@ reloadseo.url = '<?php echo $this->getUrl('adminhtml/seo/ajax', array('type' => 
 reloadseo.baseUrl = '<?php echo $this->getBaseShopUrl(); ?>';
 reloadseo.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.storeId = '<?php echo $this->getStoreId(); ?>';
+reloadseo.titlePrefix = '<?php echo Mage::getStoreConfig('design/head/title_prefix', $this->getStoreId()); ?>';
+reloadseo.titleSuffix = '<?php echo Mage::getStoreConfig('design/head/title_suffix', $this->getStoreId()); ?>';
 
 reloadseo.vars.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.vars.field_mapping = <?php echo json_encode($fieldMapping); ?>;
