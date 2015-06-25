@@ -100,11 +100,26 @@ class Reload_Seo_Block_Adminhtml_Seo extends Mage_Adminhtml_Block_Template
 				$stores = Mage::app()->getStores();
 				if(is_array($stores) && count($stores) > 0)
 				{
-					$store = array_pop(array_reverse($stores));
+					$reversedStores = array_reverse($stores);
+					$store = array_pop($reversedStores);
 				}
 			}
 
 			return str_replace('http://', '', $store->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_LINK));
+		}
+		else
+		{
+			$storeId = Mage::registry('category')->getStoreId();
+			$catId = Mage::registry('category')->getId();
+
+			$appEmulation = Mage::getSingleton('core/app_emulation');
+			$initialEnvironmentInfo = $appEmulation->startEnvironmentEmulation($storeId);
+ 
+			$catUrl = Mage::getModel('catalog/category')->load($catId)->getUrl();
+
+			$appEmulation->stopEnvironmentEmulation($initialEnvironmentInfo);
+
+			return $catUrl;
 		}
 		return null;
 	}

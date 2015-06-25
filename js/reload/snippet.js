@@ -23,16 +23,24 @@ var reloadseoSnippet = {
 	 * Init prepares the use of the snippets.
 	 * @return void
 	 */
-	init: function()
+	init: function(type)
 	{
 		//Create an element for measuring the width of the text. This element is hidden by css.
 		$reloadseo('body').append($reloadseo('<div id="snippet-test"></div>'));
 
 		//Move the snippet into the form, the snippet is created in the seo.phtml template.
-		var productForm = $reloadseo('#product_edit_form');
+		if(type == 'product')
+		{
+			var form = $reloadseo('#product_edit_form');
+		}
+		else
+		{
+			var form = $reloadseo('#category_edit_form');
+		}
+
 		var snippet = $reloadseo('#reload-snippet');
 		snippet.remove();
-		productForm.prepend(snippet);
+		form.prepend(snippet);
 		snippet.show();
 
 		//Bind the toggle button for hiding and showing the snippet.

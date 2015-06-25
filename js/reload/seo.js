@@ -214,7 +214,7 @@ var reloadseo = {
 
             if(metaTitleField.length && metaDescriptionField.length)
             {
-                reloadseoSnippet.init();
+                reloadseoSnippet.init(reloadseo.vars.type);
 
                 var metaTitle = metaTitleField.val();
                 if(reloadseo.titleSuffix.length > 0)
@@ -430,6 +430,7 @@ var reloadseo = {
      */
     updateSnippetUrl: function()
     {
+        var snippetElement = $reloadseo('.url-snippet').first();
         if(reloadseo.type === 'product')
         {
             var urlKeyField = $reloadseo('.track-seo').filter(function()
@@ -437,12 +438,14 @@ var reloadseo = {
                 return ($reloadseo(this).data('track-field') === 'url_key');
             }).first();
 
-            var snippetElement = $reloadseo('.url-snippet').first();
-
             if(urlKeyField.length && snippetElement.length)
             {
                 snippetElement.html(reloadseo.baseUrl + urlKeyField.val() + '<div class="action-menu"><span class="url-chevron"></span></div>');
             }
+        }
+        else
+        {
+            snippetElement.html(reloadseo.baseUrl);
         }
     },
 
