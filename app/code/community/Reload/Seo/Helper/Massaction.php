@@ -40,18 +40,6 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
     protected $useNameAsDefaultKeywords;
 
     /**
-     * Whether the user selected disabled products.
-     * @var boolean
-     */
-    protected $hasDisabledProducts = false;
-
-    /**
-     * Whether the user selected enabled products.
-     * @var boolean
-     */
-    protected $hasEnabledProducts = false;
-
-    /**
      * prepareAction prepares and initializes all data required to process this action.
      * 
      * @param  array $productIds
@@ -101,71 +89,65 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
         //Loop over all the products.
         foreach($this->productCollection as $product)
         {
-            if(!$this->shouldProductBeChecked($product))
+            $sku = $product->getSku();
+
+            //Add the SKU to the data array.
+            $data[] = http_build_query(array('products[]sku' => $sku));
+
+            if(array_key_exists($product->getId(), $this->scoresByProductId))
             {
-                $this->hasDisabledProducts = true;
+                $score = $this->scoresByProductId[$product->getId()];
+                if($this->useNameAsDefaultKeywords && $score->getKeywords() == null)
+                {
+                    $score->generateKeywords($product->getName());
+                }
+
+                if($score->getKeywords() == null && $this->storeId > 0)
+                {
+                    $defaultScore = Mage::getModel('reload_seo/score')->getCollection()
+                        ->addFieldToFilter('type', array('eq' => $score->getType()))
+                        ->addFieldToFilter('reference_id', array('eq' => $score->getReferenceId()))
+                        ->addFieldToFilter('store_id', array('eq' => 0))
+                        ->getFirstItem();
+
+                    if($defaultScore != null)
+                    {
+                        $score->setKeywords($defaultScore->getKeywords());
+                    }
+                }
+
+                $data[] = http_build_query(array('products[]keywords' => $score->getKeywords()));
             }
-            else
+            elseif($this->useNameAsDefaultKeywords)
             {
-                $this->hasEnabledProducts = true;
+                $data[] = http_build_query(array('products[]keywords' => $product->getName()));
+            }
 
-                $sku = $product->getSku();
+            $data[] = http_build_query(array('products[]store_id' => $product->getStoreId()));
 
-                //Add the SKU to the data array.
-                $data[] = http_build_query(array('products[]sku' => $sku));
-
-                if(array_key_exists($product->getId(), $this->scoresByProductId))
+            foreach($this->fieldMapping as $external => $internal)
+            {
+                //Obtain all the field names and data and append them to the data array.
+                if($product->getData($internal) != null)
                 {
-                    $score = $this->scoresByProductId[$product->getId()];
-                    if($this->useNameAsDefaultKeywords && $score->getKeywords() == null)
-                    {
-                        $score->generateKeywords($product->getName());
-                    }
-
-                    if($score->getKeywords() == null && $this->storeId > 0)
-                    {
-                        $defaultScore = Mage::getModel('reload_seo/score')->getCollection()
-                            ->addFieldToFilter('type', array('eq' => $score->getType()))
-                            ->addFieldToFilter('reference_id', array('eq' => $score->getReferenceId()))
-                            ->addFieldToFilter('store_id', array('eq' => 0))
-                            ->getFirstItem();
-
-                        if($defaultScore != null)
-                        {
-                            $score->setKeywords($defaultScore->getKeywords());
-                        }
-                    }
-
-                    $data[] = http_build_query(array('products[]keywords' => $score->getKeywords()));
+                    $data[] = http_build_query(array('products[]' . $external => $product->getData($internal)));
                 }
-                elseif($this->useNameAsDefaultKeywords)
-                {
-                    $data[] = http_build_query(array('products[]keywords' => $product->getName()));
-                }
+            }
 
-                $data[] = http_build_query(array('products[]store_id' => $product->getStoreId()));
+            $data[] = http_build_query(array('products[]status' => $product->getStatus()));
+            $data[] = http_build_query(array('products[]visibility' => $product->getVisibility()));
 
-                foreach($this->fieldMapping as $external => $internal)
-                {
-                    //Obtain all the field names and data and append them to the data array.
-                    if($product->getData($internal) != null)
-                    {
-                        $data[] = http_build_query(array('products[]' . $external => $product->getData($internal)));
-                    }
-                }
-
-                $images = array();
-                foreach($product->getMediaGalleryImages() as $image)
-                {
-                    $images[] = array(
-                        'url' => $image->getUrl(),
-                        'name' => $image->getLabel(),
-                    );
-                }
-                if(count($images) > 0)
-                {
-                    $data[] = http_build_query(array('products[]images[]' => $images));
-                }
+            $images = array();
+            foreach($product->getMediaGalleryImages() as $image)
+            {
+                $images[] = array(
+                    'url' => $image->getUrl(),
+                    'name' => $image->getLabel(),
+                );
+            }
+            if(count($images) > 0)
+            {
+                $data[] = http_build_query(array('products[]images[]' => $images));
             }
         }
 
@@ -184,68 +166,56 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
 
         $data = $this->collectData();
 
-        if($this->hasEnabledProducts)
+        //Build the url for the mass update.
+        $url = $this->buildUrl('index', 
+            array(
+                'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
+                'language' => Mage::app()->getLocale()->getLocaleCode(),
+                'type' => 'product',
+                'framework' => 'magento',
+                'website' => Mage::getBaseUrl(),
+            )
+        );
+
+        $data[] = http_build_query(array('stores' => $this->collectStores()));
+
+        //Execute the request.
+        $results = $this->executeCurlRequest($url, implode('&', $data), true);
+
+        if($results === null)
         {
-            //Build the url for the mass update.
-            $url = $this->buildUrl('index', 
-                array(
-                    'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
-                    'language' => Mage::app()->getLocale()->getLocaleCode(),
-                    'type' => 'product',
-                    'framework' => 'magento',
-                    'website' => Mage::getBaseUrl(),
-                )
-            );
+            //Something went wrong.
+            throw new Exception($this->__('Something went wrong while updating the product SEO statusses.'));
+        }
 
-            $data[] = http_build_query(array('stores' => $this->collectStores()));
+        //Sort the results by the sku's.
+        $resultsBySku = array();
+        foreach($results as $result)
+        {
+            $resultsBySku[$result['sku']] = $result;
+        }
 
-            //Execute the request.
-            $results = $this->executeCurlRequest($url, implode('&', $data), true);
-
-            if($results === null)
+        try
+        {
+            //Loop over all products and get the result for each product.
+            foreach($this->productCollection as $product)
             {
-                //Something went wrong.
-                throw new Exception($this->__('Something went wrong while updating the product SEO statusses.'));
-            }
-
-            //Sort the results by the sku's.
-            $resultsBySku = array();
-            foreach($results as $result)
-            {
-                $resultsBySku[$result['sku']] = $result;
-            }
-
-            try
-            {
-                //Loop over all products and get the result for each product.
-                foreach($this->productCollection as $product)
+                if(array_key_exists($product->getSku(), $resultsBySku))
                 {
-                    if(array_key_exists($product->getSku(), $resultsBySku))
+                    //Load the score object or create it if it doesn't exist and merge the results into the object.
+                    $score = Mage::getModel('reload_seo/score')->loadById($product->getId(), 'product');
+                    if($this->useNameAsDefaultKeywords && $score->getKeywords() == null)
                     {
-                        //Load the score object or create it if it doesn't exist and merge the results into the object.
-                        $score = Mage::getModel('reload_seo/score')->loadById($product->getId(), 'product');
-                        if($this->useNameAsDefaultKeywords && $score->getKeywords() == null)
-                        {
-                            $score->generateKeywords($product->getName());
-                        }
-                        $score->mergeFromResult($resultsBySku[$product->getSku()]);
+                        $score->generateKeywords($product->getName());
                     }
+                    $score->mergeFromResult($resultsBySku[$product->getSku()]);
                 }
             }
-            catch(Exception $ex)
-            {
-                //Something went wrong while saving the results.
-                throw new Exception($this->__('Something went wrong while processing the product SEO results.'));
-            }
-
-            if($this->hasDisabledProducts)
-            {
-                Mage::getSingleton('adminhtml/session')->addNotice($this->__('Some selected products are disabled or invisible and were not updated, only enabled products will be updated.'));
-            }
         }
-        else
+        catch(Exception $ex)
         {
-            throw new Exception($this->__('Only enabled and visible products will be updated, please select enabled products.'));
+            //Something went wrong while saving the results.
+            throw new Exception($this->__('Something went wrong while processing the product SEO results.'));
         }
     }
 }

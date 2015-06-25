@@ -119,6 +119,8 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
         {
             //The item is a product, the sku will be used as is.
             $data['product[sku]'] = $item->getSku();
+            $data['product[status]'] = $item->getStatus();
+            $data['product[visibility'] = $item->getVisibility();
 
             //Prepare the error for later use.
             $error = $this->__('Something went wrong while updating the product SEO status.');
@@ -279,37 +281,6 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
             $fieldMapping['meta_description'] = 'meta_description';
         }
         return $fieldMapping;
-    }
-
-    /**
-     * shouldProductBeChecked checks if a product should be send to the api or not. (When the product is disabled or
-     * not visible, it should not be checked.)
-     * 
-     * @param  Varien_Object $product
-     * @return bool
-     */
-    public function shouldProductBeChecked($product)
-    {
-        if($product == null)
-        {
-            return false;
-        }
-
-        if($product instanceof Mage_Catalog_Model_Product)
-        {
-            if($product->getStatus() == 2)
-            {
-                //The product has been disabled explicit.
-                return false;
-            }
-
-            if($product->getVisibility() == Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE)
-            {
-                //The product is not visible.
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

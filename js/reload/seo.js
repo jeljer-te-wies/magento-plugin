@@ -359,67 +359,47 @@ var reloadseo = {
 
         if(changed)
         {
-            var shouldCheck = true;
-            if('status' in data && data.status == 2)
+            //Changes were made, abort the current request.
+            if(self.currentRequest !== null)
             {
-                shouldCheck = false;
+                self.currentRequest.abort();
             }
+            self.data = data;
 
-            if('visibility' in data && data.visibility == self.vars.invisble_value)
-            {
-                shouldCheck = false;
-            }
+            //Obtain the form key.
+            data.form_key = self.vars.form_key;
 
-            if(!shouldCheck)
+            //Make the AJAX request.
+            self.currentRequest = $reloadseo.ajax({
+                url: self.url,
+                type: 'post',
+                data: data,
+                dataType: 'json'
+            }).done(function(data)
             {
-                $reloadseo('.base-score > .messages').slideDown(200);
-            }
-            else
-            {
-                $reloadseo('.base-score > .messages').slideUp(200);
-
-                //Changes were made, abort the current request.
-                if(self.currentRequest !== null)
+                if(data != null && 'score' in data)
                 {
-                    self.currentRequest.abort();
-                }
-                self.data = data;
+                    //Only do something when the data was valid.
+                    var elements = $reloadseo('.reload-seo-scores');
 
-                //Obtain the form key.
-                data.form_key = self.vars.form_key;
-
-                //Make the AJAX request.
-                self.currentRequest = $reloadseo.ajax({
-                    url: self.url,
-                    type: 'post',
-                    data: data,
-                    dataType: 'json'
-                }).done(function(data)
-                {
-                    if(data != null && 'score' in data)
+                    elements.each(function()
                     {
-                        //Only do something when the data was valid.
-                        var elements = $reloadseo('.reload-seo-scores');
+                        var element = jQuery(this);
+                        //Set the basic score value and color.
+                        element.find('.base-score>span.seo-score').first().text(data.score.toString());
+                        element.find('.base-score>span.seo-score').first().css('background-color', data.color);
 
-                        elements.each(function()
+                        //Remove all current rules.
+                        element.find('.seo-rules>table>tbody>tr.seo-rule').remove();
+                        var tbodyElement = element.find('.seo-rules>table>tbody').first();
+                        $reloadseo.each(data.rules, function(k, v)
                         {
-                            var element = jQuery(this);
-                            //Set the basic score value and color.
-                            element.find('.base-score>span.seo-score').first().text(data.score.toString());
-                            element.find('.base-score>span.seo-score').first().css('background-color', data.color);
-
-                            //Remove all current rules.
-                            element.find('.seo-rules>table>tbody>tr.seo-rule').remove();
-                            var tbodyElement = element.find('.seo-rules>table>tbody').first();
-                            $reloadseo.each(data.rules, function(k, v)
-                            {
-                                //Loop over the rules and create html rows.
-                                tbodyElement.append($reloadseo("<tr class='seo-rule'><td class='indicator'><div class='indicator-dot' style='background-color: " + v.color + ";'></div></td><td>" + v.title + "</td></tr>"));
-                            });
+                            //Loop over the rules and create html rows.
+                            tbodyElement.append($reloadseo("<tr class='seo-rule'><td class='indicator'><div class='indicator-dot' style='background-color: " + v.color + ";'></div></td><td>" + v.title + "</td></tr>"));
                         });
-                    }
-                });
-            }
+                    });
+                }
+            });
         }
     },
 
