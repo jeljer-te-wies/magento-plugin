@@ -272,19 +272,23 @@ var reloadseo = {
             }
         });
 
-        //Collect the image urls and labels.
-        var images = {};
-        if(typeof media_gallery_contentJsObject !== 'undefined' && typeof media_gallery_contentJsObject.images !== 'undefined')
+        if(reloadseo.analyze_images)
         {
-            $reloadseo.each(media_gallery_contentJsObject.images, function(k, v)
+            //Collect the image urls and labels.
+            var images = {};
+            if(typeof media_gallery_contentJsObject !== 'undefined' && typeof media_gallery_contentJsObject.images !== 'undefined')
             {
-                images[k] = {
-                    url: v.url,
-                    name: v.label
-                };
-            });
+                $reloadseo.each(media_gallery_contentJsObject.images, function(k, v)
+                {
+                    images[k] = {
+                        url: v.url,
+                        name: v.label
+                    };
+                });
+            }
+            data['images'] = images;
         }
-        data['images'] = images;
+
         data['store_id'] = reloadseo.storeId;
 
         var visibilitySelect = $reloadseo('#visibility');
@@ -366,14 +370,28 @@ var reloadseo = {
             }
             self.data = data;
 
-            //Obtain the form key.
-            data.form_key = self.vars.form_key;
+            //Prepare the data in the format reload seo api wants to receive it.
+            var preparedData = {};
+            if(self.type != 'product')
+            {
+                preparedData['product[sku]'] = 'category-' + self.referenceId;
+                self.type = 'category';
+            }
+
+            preparedData['product[product_id]'] = self.type + '-' + self.referenceId;
+
+            for(var key in data)
+            {
+                preparedData['product[' + key + ']'] = data[key];
+            }
+
+            preparedData['stores'] = self.stores;
 
             //Make the AJAX request.
             self.currentRequest = $reloadseo.ajax({
                 url: self.url,
                 type: 'post',
-                data: data,
+                data: preparedData,
                 dataType: 'json'
             }).done(function(data)
             {

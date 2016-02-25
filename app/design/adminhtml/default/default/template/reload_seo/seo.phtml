@@ -89,18 +89,28 @@ if($this->getScore() != null) {
 	</div>
 </div>
 <?php $fieldMapping = Mage::helper('reload_seo')->getFieldMappings($this->getScore()->getType()); ?>
+<?php $ajaxUrl = Mage::helper('reload_seo')->buildUrl('show', array(
+    'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
+    'language' => Mage::app()->getLocale()->getLocaleCode(),
+    'type' => $this->getScore()->getType(),
+    'framework' => 'magento',
+    'website' => Mage::getBaseUrl()
+)); ?>
 <script type="text/javascript">
 //Declare all required variables for using in the seo.js file.
-reloadseo.url = '<?php echo $this->getUrl('adminhtml/seo/ajax', array('type' => $this->getScore()->getType(), 'reference' => $this->getScore()->getReferenceId())); ?>';
+
+reloadseo.url = '<?php echo $ajaxUrl; ?>';
+reloadseo.referenceId = '<?php echo $this->getScore()->getReferenceId(); ?>';
 reloadseo.baseUrl = '<?php echo $this->getBaseShopUrl(); ?>';
 reloadseo.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.storeId = '<?php echo $this->getStoreId(); ?>';
 reloadseo.titlePrefix = '<?php echo Mage::getStoreConfig('design/head/title_prefix', $this->getStoreId()); ?>';
 reloadseo.titleSuffix = '<?php echo Mage::getStoreConfig('design/head/title_suffix', $this->getStoreId()); ?>';
+reloadseo.analyze_images = parseInt('<?php echo Mage::getStoreConfig('reload/reload_seo_group/reload_seo_analyze_images'); ?>');
+reloadseo.stores = <?php echo json_encode(Mage::helper('reload_seo')->collectStores()); ?>;
 
 reloadseo.vars.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.vars.field_mapping = <?php echo json_encode($fieldMapping); ?>;
-reloadseo.vars.form_key = '<?php echo Mage::getSingleton('core/session')->getFormKey(); ?>';
 reloadseo.vars.invisble_value = <?php echo Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE; ?>;
 
 //Init the system.

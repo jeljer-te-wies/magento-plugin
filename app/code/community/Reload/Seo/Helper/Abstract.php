@@ -28,7 +28,7 @@ class Reload_Seo_Helper_Abstract extends Mage_Core_Helper_Abstract
      * @param  array  $params
      * @return string      
      */
-    protected function buildUrl($action, $params = array())
+    public function buildUrl($action, $params = array())
     {
         $url = $this->url . $this->version . 'seo';
 
@@ -102,7 +102,7 @@ class Reload_Seo_Helper_Abstract extends Mage_Core_Helper_Abstract
      * 
      * @return array
      */
-    protected function collectStores()
+    public function collectStores()
     {
         $storesData = array();
 

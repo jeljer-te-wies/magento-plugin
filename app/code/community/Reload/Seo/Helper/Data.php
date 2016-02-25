@@ -129,14 +129,17 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
             $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'product');
             $type = 'product';
 
-            //Append the image data.
-            $data['product[images]'] = array();
-            foreach($item->getMediaGalleryImages() as $image)
+            if(Mage::getStoreConfig('reload/reload_seo_group/reload_seo_analyze_images'))
             {
-                $data['product[images]'][] = array(
-                    'url' => $image->getUrl(),
-                    'name' => $image->getLabel(),
-                );
+                //Append the image data.
+                $data['product[images]'] = array();
+                foreach($item->getMediaGalleryImages() as $image)
+                {
+                    $data['product[images]'][] = array(
+                        'url' => $image->getUrl(),
+                        'name' => $image->getLabel(),
+                    );
+                }
             }
         }
         else
@@ -190,62 +193,6 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
 
         //Merge the result in the score object.
         $score->mergeFromResult($result);
-    }
-
-    /**
-     * ajaxCheck executes the same as the updateItem function but does not save the results.
-     * 
-     * @param  string $type
-     * @param  string $referenceId
-     * @param  array $data
-     * @return array
-     */
-    public function ajaxCheck($type, $referenceId, $data)
-    {
-        //Create an array for the prepared data.
-        $preparedData = array();
-        if($type === 'product')
-        {
-            //The type is product.
-            $type = 'product';
-        }
-        else
-        {
-            //The type is category.
-            $preparedData['product[sku]'] = 'category-' . $referenceId;
-            $type = 'category';
-        }
-
-        $preparedData['product[product_id]'] = $type . '-' . $referenceId;
-
-        foreach($data as $key => $value)
-        {
-            //Loop over all data and prepare it.
-            $preparedData['product['.$key.']'] = $value;
-        }
-
-        $preparedData['stores'] = $this->collectStores();
-
-        //Prepare the url for the call.
-        $url = $this->buildUrl('show', 
-            array(
-                'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
-                'language' => Mage::app()->getLocale()->getLocaleCode(),
-                'type' => $type,
-                'framework' => 'magento',
-                'website' => Mage::getBaseUrl()
-            )
-        );
-
-        //Excecute the call.
-        $result = $this->executeCurlRequest($url, $preparedData);
-        if($result === null || !array_key_exists('score', $result))
-        {
-            //Somethineg went wrong, throw an exception.
-            throw new Exception();
-        }
-        //The call was successfull, return the result.
-        return $result;
     }
 
     /**

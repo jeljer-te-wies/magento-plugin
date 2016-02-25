@@ -137,17 +137,20 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
             $data[] = http_build_query(array('products[]status' => $product->getStatus()));
             $data[] = http_build_query(array('products[]visibility' => $product->getVisibility()));
 
-            $images = array();
-            foreach($product->getMediaGalleryImages() as $image)
+            if(Mage::getStoreConfig('reload/reload_seo_group/reload_seo_analyze_images'))
             {
-                $images[] = array(
-                    'url' => $image->getUrl(),
-                    'name' => $image->getLabel(),
-                );
-            }
-            if(count($images) > 0)
-            {
-                $data[] = http_build_query(array('products[]images[]' => $images));
+                $images = array();
+                foreach($product->getMediaGalleryImages() as $image)
+                {
+                    $images[] = array(
+                        'url' => $image->getUrl(),
+                        'name' => $image->getLabel(),
+                    );
+                }
+                if(count($images) > 0)
+                {
+                    $data[] = http_build_query(array('products[]images[]' => $images));
+                }
             }
         }
 

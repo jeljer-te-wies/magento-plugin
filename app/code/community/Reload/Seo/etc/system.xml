@@ -49,6 +49,16 @@
                             <show_in_website>0</show_in_website>
                             <show_in_store>0</show_in_store>
                         </reload_seo_title_default>
+                        <reload_seo_analyze_images>
+                            <label>Analyze images:</label>
+                            <comment>Do you want us to analyze images file names and alt tags?</comment>
+                            <frontend_type>select</frontend_type>
+                            <sort_order>40</sort_order>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </reload_seo_analyze_images>
                     </fields>
                 </reload_seo_group>
                 <reload_seo_mappings translate="label comment" module="reload_seo">
