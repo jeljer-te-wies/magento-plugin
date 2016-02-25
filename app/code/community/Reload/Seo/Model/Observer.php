@@ -253,20 +253,6 @@ class Reload_Seo_Model_Observer
 	{
 		//Obtain the block which is being prepared.
 		$block = $observer->getBlock();
-		if($block instanceof Mage_Adminhtml_Block_Catalog_Product_Edit || $block instanceof Mage_Adminhtml_Block_Catalog_Product_Grid || $block instanceof Mage_Adminhtml_Block_Catalog_Category_Edit_Form)
-		{
-			//If the block is an Mage_Adminhtml_Block_Catalog_Product_Edit or Grid or Category_Edit_Form we want to check the config.
-			try
-			{
-				//Check the configuration.
-				Mage::helper('reload_seo')->validConfig();
-			}
-			catch(Exception $ex)
-			{
-				//The configuration is not valid, show the message.
-				Mage::getSingleton('adminhtml/session')->addError($ex->getMessage());
-			}
-		}
 
 		if($block instanceof Mage_Adminhtml_Block_Catalog_Product_Edit || $block instanceof Mage_Adminhtml_Block_Catalog_Category_Edit_Form)
 		{
@@ -340,10 +326,10 @@ class Reload_Seo_Model_Observer
 		$block = $observer->getBlock();
 		$transport = $observer->getTransport();
 
+		$html = $transport->getHtml();
 		if($block instanceof Mage_Adminhtml_Block_Catalog_Category_Edit_Form)
 		{
 			//If the block is an category edit form create an Reload_Seo_Block_Adminhtml_Seo block.
-			$html = $transport->getHtml();
 
 			$seoBlock = $block->getLayout()->createBlock(
 				'Reload_Seo_Block_Adminhtml_Seo',
@@ -355,9 +341,6 @@ class Reload_Seo_Model_Observer
 
 			//Append the html to the Mage_Adminhtml_Block_Catalog_Category_Edit_Form it's html.
 			$html .= $seoBlock->toHtml();
-
-			//Store the complete html in the transport object.
-			$transport->setHtml($html);
 		}
 		elseif($block instanceof Mage_Adminhtml_Block_Catalog_Form_Renderer_Fieldset_Element && $block->getAttribute() != null)
 		{
@@ -386,8 +369,6 @@ class Reload_Seo_Model_Observer
 						}
 					}
 
-					$html = $transport->getHtml();
-
 					//Clone the attribute 
 					$keywordsAttribute = clone $attribute;
 					$keywordsAttribute->setAttributeCode('reload_seo_keywords');
@@ -404,7 +385,6 @@ class Reload_Seo_Model_Observer
 					$keywordsElement->setForm($block->getElement()->getForm());
 
 					$html .= $block->render($keywordsElement);
-					$transport->setHtml($html);
 				}
 			}
 			catch(Exception $ex)
@@ -412,5 +392,30 @@ class Reload_Seo_Model_Observer
 
 			}			
 		}
+
+		if($block instanceof Mage_Adminhtml_Block_Catalog_Product_Edit || $block instanceof Mage_Adminhtml_Block_Catalog_Product_Grid || $block instanceof Mage_Adminhtml_Block_Catalog_Category_Edit_Form)
+		{
+			$vars = array(
+				//Obtain the API key from the configuration
+				'api_key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'),
+
+				//Create the validate key url.
+				'check_url' => Mage::helper('reload_seo')->buildUrl('validate_key', array('key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 'website' => Mage::getBaseUrl())),
+
+				//Create a set with default messages.
+				'messages' => array(
+					'empty_key' => Mage::helper('reload_seo')->__("No API key given, please enter your API key in the <a href='%s'>configuration</a>.", Mage::helper("adminhtml")->getUrl('adminhtml/system_config/edit/section/reload')),
+					'default_invalid_message' => Mage::helper('reload_seo')->__("The given API key is invalid, please enter a valid API key in the <a href='%s'>configuration</a>.", Mage::helper("adminhtml")->getUrl('adminhtml/system_config/edit/section/reload'))
+				),
+
+				//Get the config url.
+				'config_url' => Mage::helper("adminhtml")->getUrl('adminhtml/system_config/edit/section/reload')
+			);
+
+			$html .= '<script type="text/javascript">reloadseo.checkKey(' . json_encode($vars) . ');</script>';
+		}
+
+		//Store the complete html in the transport object.
+		$transport->setHtml($html);
 	}
 }

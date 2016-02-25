@@ -43,6 +43,50 @@ var reloadseo = {
     data: {},
 
     /**
+     * checkKey checks the key with the api.
+     * 
+     * @return void
+     */
+    checkKey: function(vars)
+    {
+        if(vars.api_key == null || vars.api_key.length <= 0)
+        {
+            reloadseo.setMessage(vars.messages.empty_key, 'error');
+        }
+        else
+        {
+            $reloadseo.ajax({
+                url: vars.check_url,
+                dataType: 'json'
+            }).done(function(data)
+            {
+                if('message' in data)
+                {
+                    reloadseo.setMessage(data.message.title.replace('%s', vars.config_url), data.message.type);
+                }
+                else if(!('key' in data) || data.key != 'valid')
+                {
+                    reloadseo.setMessage(vars.messages.default_invalid_message, 'error');
+                }
+            });
+        }
+    },
+
+    setMessage: function(message, type)
+    {
+        var messagesDiv = $reloadseo('#messages');
+        var ul = messagesDiv.find('ul.messages').first();
+        if(ul.length)
+        {
+            ul.append($reloadseo('<li class="' + type + '-msg"><ul><li><span>' + message + '</span></li></ul></li>'));
+        }
+        else
+        {
+            messagesDiv.append($reloadseo('<ul class="messages"><li class="' + type + '-msg"><ul><li><span>' + message + '</span></li></ul></li></ul>'));
+        }
+    },
+
+    /**
      * init initializes everything
      * @return void
      */

@@ -6,6 +6,16 @@
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */ -->
 <layout>
+    <adminhtml_catalog_product_index>
+        <reference name="head">
+            <action method="addJs">
+                <script>reload/jquery.min.js</script>
+            </action>
+            <action method="addJs">
+                <script>reload/seo.js</script>
+            </action>
+        </reference>
+    </adminhtml_catalog_product_index>
     <adminhtml_catalog_product_new>
         <reference name="head">
             <action method="addJs">
