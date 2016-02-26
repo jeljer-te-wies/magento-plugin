@@ -100,7 +100,7 @@ class Reload_Seo_Block_Adminhtml_Seo extends Mage_Adminhtml_Block_Template
 			$appEmulation = Mage::getSingleton('core/app_emulation');
 			$initialEnvironmentInfo = $appEmulation->startEnvironmentEmulation($storeId);
  
-			$productUrl = Mage::getModel('catalog/product')->load($productId)->getProductUrl();
+			$productUrl = Mage::getBaseUrl(); //Mage::getModel('catalog/product')->load($productId)->getProductUrl();
 
 			$appEmulation->stopEnvironmentEmulation($initialEnvironmentInfo);
 
@@ -114,7 +114,7 @@ class Reload_Seo_Block_Adminhtml_Seo extends Mage_Adminhtml_Block_Template
 			$appEmulation = Mage::getSingleton('core/app_emulation');
 			$initialEnvironmentInfo = $appEmulation->startEnvironmentEmulation($storeId);
  
-			$catUrl = Mage::getModel('catalog/category')->load($catId)->getUrl();
+			$catUrl = Mage::getBaseUrl(); //Mage::getModel('catalog/category')->load($catId)->getUrl();
 
 			$appEmulation->stopEnvironmentEmulation($initialEnvironmentInfo);
 

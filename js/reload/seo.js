@@ -584,6 +584,7 @@ var reloadseo = {
      */
     updateSnippetUrl: function()
     {
+        console.log('hier');
         var snippetElement = $reloadseo('.url-snippet').first();
         if(reloadseo.type === 'product')
         {
@@ -591,15 +592,15 @@ var reloadseo = {
             {
                 return ($reloadseo(this).data('track-field') === 'url_key');
             }).first();
-
-            if(urlKeyField.length && snippetElement.length)
-            {
-                snippetElement.html(reloadseo.baseUrl + urlKeyField.val() + '<div class="action-menu"><span class="url-chevron"></span></div>');
-            }
         }
         else
         {
-            snippetElement.html(reloadseo.baseUrl);
+            var urlKeyField = $reloadseo(".track-seo[name='general[url_key]']").first();
+        }
+
+        if(urlKeyField.length && snippetElement.length)
+        {
+            snippetElement.html(reloadseo.baseUrl + urlKeyField.val() + '<div class="action-menu"><span class="url-chevron"></span></div>');
         }
     },
 
