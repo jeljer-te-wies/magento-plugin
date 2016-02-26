@@ -17,7 +17,10 @@ class Reload_Seo_Model_Observer
 	 */
 	public function catalogProductLoadAfter($observer)
 	{
-		$this->_registerScore($observer->getProduct()->getId(), 'product', $observer->getProduct());
+		if(Mage::app()->getRequest()->getControllerName() != 'catalog_category')
+		{
+			$this->_registerScore($observer->getProduct()->getId(), 'product', $observer->getProduct());
+		}
 	}
 
 	/**
@@ -28,7 +31,10 @@ class Reload_Seo_Model_Observer
 	 */
 	public function catalogCategoryLoadAfter($observer)
 	{
-		$this->_registerScore($observer->getCategory()->getId(), 'category', $observer->getCategory());
+		if(Mage::app()->getRequest()->getControllerName() != 'catalog_product')
+		{
+			$this->_registerScore($observer->getCategory()->getId(), 'category', $observer->getCategory());
+		}
 	}
 
 	/**
