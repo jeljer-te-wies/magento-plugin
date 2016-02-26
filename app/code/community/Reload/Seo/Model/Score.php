@@ -61,6 +61,7 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
         }
 
         $score->setDefaultKeywords($score->getKeywords());
+        $score->setDefaultSynonyms($score->getSynonyms());
 
         if($score->getStoreId() != 0)
         {
@@ -73,10 +74,16 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
             if($defaultScore != null)
             {
                 $score->setDefaultKeywords($defaultScore->getKeywords());
+                $score->setDefaultSynonyms($defaultScore->getSynonyms());
 
                 if($score->getKeywords() == null)
                 {
                     $score->setKeywords($defaultScore->getKeywords());
+                }
+
+                if($score->getSynonyms() == null)
+                {
+                    $score->setSynonyms($defaultScore->getSynonyms());
                 }
             }
         }
@@ -89,6 +96,7 @@ class Reload_Seo_Model_Score extends Mage_Core_Model_Abstract
         if($id == null)
         {
             $score->setKeywords('');
+            $score->setSynonyms('');
         }
 
         return $score;

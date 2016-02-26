@@ -206,6 +206,7 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
 
         $data['product[product_id]'] = $type . '-' . $item->getId();
         $data['product[keywords]'] = $score->getKeywords();
+        $data['product[synonyms]'] = $score->getSynonyms();
         $data['product[store_id]'] = $item->getStoreId();
 
         //Obtain the field mapping by the type and loop over each field, obtain the data and store it.

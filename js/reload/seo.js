@@ -260,6 +260,10 @@ var reloadseo = {
         $reloadseo('input.reload-seo-keywords-field').data('track-field', 'keywords');
         $reloadseo('input.reload-seo-keywords-field').addClass('track-seo');
 
+        //Prepare the seo synonyms field
+        $reloadseo('input.reload-seo-synonyms-field').data('track-field', 'synonyms');
+        $reloadseo('input.reload-seo-synonyms-field').addClass('track-seo');
+
         if(self.vars.type === 'product') {
             $reloadseo("[name='product[sku]']").addClass('track-seo').data('track-field', 'sku');
             if($reloadseo("#visibility").length)
@@ -355,6 +359,60 @@ var reloadseo = {
             //A new option is being selected, clear the rest.
             $reloadseo(this).data('select2').data([]);
         });
+
+        $reloadseo('input.reload-seo-synonyms-field').select2({
+            tags: true,
+            placeholder: '',
+            tokenSeparators: [","],
+            minimumInputLength: 1,
+            maximumSelectionLength: 2,
+            initSelection : function (element, callback) {
+                var asString = $reloadseo('input.reload-seo-synonyms-field').val();
+                var data = [];
+                $reloadseo.each(asString.split(','), function(k, v)
+                {
+                    data.push({id: v, text: v});
+                });             
+                callback(data);
+            },
+            ajax: {
+                url: "https://suggestqueries.google.com/complete/search?callback=?",
+                dataType: 'jsonp',
+                data: function (term, page) {
+                    return {q: term, hl: 'en', client: 'firefox' };
+                },
+                results: function (data, page) { 
+                    var items = {};
+
+                    $reloadseo.each(data[1], function(k, v)
+                    {
+                        items[v.toLowerCase()] = v.toLowerCase();
+                        
+                    });
+                    
+                    var input = $reloadseo('input.reload-seo-synonyms-field').data().select2.search.val();
+                    $reloadseo.each(input.split(','), function(k, v)
+                    {
+                        items[v.toLowerCase()] = v.toLowerCase();
+                    });
+
+                    var results = [];
+                    results.push({id: input.toLowerCase(), text: input.toLowerCase()});
+                    $reloadseo.each(items, function(k, v)
+                    {
+                        results.push({id: v, text: v});
+                    });
+
+                    return { results: results };
+                },
+            }
+        });
+
+        // $reloadseo('input.reload-seo-synonyms-field').on('select2-selecting', function(e)
+        // {
+        //     //A new option is being selected, clear the rest.
+        //     $reloadseo(this).data('select2').data([]);
+        // });
 
         if(typeof reloadseoSnippet !== 'undefined')
         {
@@ -584,7 +642,6 @@ var reloadseo = {
      */
     updateSnippetUrl: function()
     {
-        console.log('hier');
         var snippetElement = $reloadseo('.url-snippet').first();
         if(reloadseo.type === 'product')
         {

@@ -56,11 +56,17 @@ class Reload_Seo_Model_Observer
 
 		$observerObject->setScoreObject($scoreObject);
 		$observerObject->setReloadSeoKeywords($scoreObject->getKeywords());
+		$observerObject->setReloadSeoSynonyms($scoreObject->getSynonyms());
 		$observerObject->setAttributeDefaultValue('reload_seo_keywords', $scoreObject->getDefaultKeywords());
 
 		if($scoreObject->getKeywords() != null  && $scoreObject->getKeywords() != $scoreObject->getDefaultKeywords())
 		{
 			$observerObject->setExistsStoreValueFlag('reload_seo_keywords');
+		}
+
+		if($scoreObject->getSynonyms() != null && $scoreObject->getSynonyms() != $scoreObject->getDefaultSynonyms())
+		{
+			$observerObject->setExistsStoreValueFlag('reload_seo_synonyms');
 		}
 
 		if(Mage::registry('seo_score') != null)
@@ -158,7 +164,17 @@ class Reload_Seo_Model_Observer
 				{
 					$keywords = '';
 				}
-				Mage::getModel('reload_seo/score')->loadById($id, $type)->setKeywords($keywords)->save();
+
+				if(array_key_exists('reload_seo_synonyms', $post))
+				{
+					$synonyms = $post['reload_seo_synonyms'];
+				}
+				else
+				{
+					$synonyms = '';
+				}
+
+				Mage::getModel('reload_seo/score')->loadById($id, $type)->setKeywords($keywords)->setSynonyms($synonyms)->save();
 			}
 		}
 		catch(Exception $ex)
@@ -339,6 +355,40 @@ class Reload_Seo_Model_Observer
 					$keywordsElement->setForm($block->getElement()->getForm());
 
 					$html .= $block->render($keywordsElement);
+
+					$value = '';
+					if(Mage::registry('seo_score') != null)
+					{
+						//This is an edit action.
+						$scoreObject = Mage::registry('seo_score');
+						$value = $scoreObject->getSynonyms();
+
+						//Update the product or category with the synonyms, default synonyms and if the defualt flag is set or not.
+						$block->getDataObject()->setReloadSeoSynonyms($scoreObject->getSynonyms());
+						$block->getDataObject()->setAttributeDefaultValue('reload_seo_synonyms', $scoreObject->getDefaultSynonyms());
+
+						if($scoreObject->getSynonyms() != null  && $scoreObject->getSynonyms() != $scoreObject->getDefaultSynonyms())
+						{
+							$block->getDataObject()->setExistsStoreValueFlag('reload_seo_synonyms');
+						}
+					}
+
+					//Clone the attribute 
+					$synonymsAttribute = clone $attribute;
+					$synonymsAttribute->setAttributeCode('reload_seo_synonyms');
+
+					$synonymsElement = new Varien_Data_Form_Element_Text(array(
+						'label' => 'SEO synonyms',
+						'html_id' => 'reload_seo_synonyms',
+						'name' => 'reload_seo_synonyms',
+						'class' => 'input-text reload-seo-synonyms-field',
+						'entity_attribute' => $synonymsAttribute,
+						'value' => $value
+					));
+
+					$synonymsElement->setForm($block->getElement()->getForm());
+
+					$html .= $block->render($synonymsElement);
 				}
 			}
 			catch(Exception $ex)

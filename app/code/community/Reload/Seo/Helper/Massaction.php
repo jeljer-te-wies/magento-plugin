@@ -102,7 +102,7 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
                     $score->generateKeywords($product->getName());
                 }
 
-                if($score->getKeywords() == null && $this->storeId > 0)
+                if(($score->getKeywords() == null || $score->getSynonyms() == null) && $this->storeId > 0)
                 {
                     $defaultScore = Mage::getModel('reload_seo/score')->getCollection()
                         ->addFieldToFilter('type', array('eq' => $score->getType()))
@@ -112,11 +112,20 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
 
                     if($defaultScore != null)
                     {
-                        $score->setKeywords($defaultScore->getKeywords());
+                        if($score->getKeywords() == null)
+                        {
+                            $score->setKeywords($defaultScore->getKeywords());
+                        }
+
+                        if($score->getSynonyms() == null)
+                        {
+                            $score->setSynonyms($defaultScore->getSynonyms());
+                        }
                     }
                 }
 
                 $data[] = http_build_query(array('products[]keywords' => $score->getKeywords()));
+                $data[] = http_build_query(array('products[]synonyms' => $score->getSynonyms())); 
             }
             elseif($this->useNameAsDefaultKeywords)
             {
