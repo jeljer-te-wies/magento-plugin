@@ -72,18 +72,130 @@ var reloadseo = {
         }
     },
 
-    setMessage: function(message, type)
+    /**
+     * setMessages sets an error or success message.
+     * 
+     * @param string message 
+     * @param string type    
+     * @param string id
+     */
+    setMessage: function(message, type, id)
     {
+        var theMessage = $reloadseo('<li class="' + type + '-msg"><ul><li><span>' + message + '</span></li></ul></li>');
+        if(typeof id !== 'undefined')
+        {
+            var oldMessage = $reloadseo('#' + id);
+            if(oldMessage.length)
+            {
+                oldMessage.remove();
+            }
+
+            theMessage.attr('id', id);
+        }
+
         var messagesDiv = $reloadseo('#messages');
         var ul = messagesDiv.find('ul.messages').first();
-        if(ul.length)
+        if(!ul.length)
         {
-            ul.append($reloadseo('<li class="' + type + '-msg"><ul><li><span>' + message + '</span></li></ul></li>'));
+            messagesDiv.append($reloadseo('<ul class="messages"></ul>'));   
+
+            
         }
-        else
+
+        ul = messagesDiv.find('ul.messages').first();
+        ul.append(theMessage);
+    },
+
+    /**
+     * processUpdates calculates a new score after a product or category has been saved.
+     * 
+     * @param  Array    updateRequests The update requestes.
+     * @param  string   message        The message to show when the process starts.
+     * @param  string   messageOnDone  The message to show when all scores have been calculated.
+     * 
+     * @return void
+     */
+    processUpdates: function(updateRequests, message, messageOnDone)
+    {
+        $reloadseo(document).ready(function()
         {
-            messagesDiv.append($reloadseo('<ul class="messages"><li class="' + type + '-msg"><ul><li><span>' + message + '</span></li></ul></li></ul>'));
-        }
+            var count = updateRequests.length;
+            if(count > 0)
+            {
+                //Set the message.
+                reloadseo.setMessage(message, 'notice', 'reload_seo_message');
+
+                //Prepare the done message.
+                var doneMessage = {
+                    message: messageOnDone, 
+                    type: 'success'
+                };
+
+                updateRequests.each(function(updateRequest)
+                {
+                    //Make the AJAX request for each update request.
+                    $reloadseo.ajax({
+                        url: updateRequest.url,
+                        type: 'post',
+                        data: updateRequest.data,
+                        dataType: 'json'
+                    }).done(function(data)
+                    {
+                        var scoreData = data;
+
+                        //Send the result to the server.
+                        $reloadseo.ajax({
+                            url: updateRequest.save_url,
+                            type: 'post',
+                            data: {
+                                score: data,
+                                form_key: updateRequest.form_key
+                            },
+                            dataType: 'json'
+                        }).done(function(data)
+                        {
+                            var requestKey = updateRequest.request_key;
+                            var seoResultContainer = $reloadseo('.reload-seo-scores.' + requestKey).first();
+                            if(seoResultContainer.length && 'score' in scoreData)
+                            {
+                                seoResultContainer.find('.seo-score').text(scoreData.score);
+                                seoResultContainer.find('.seo-score').css('background-color', scoreData.color);
+
+                                var tbody = seoResultContainer.find('.seo-rules table tbody');
+                                tbody.find('tr').remove();
+
+                                scoreData.rules.each(function(rule)
+                                {
+                                    tbody.append('<tr class="seo-rule"><td class="indicator"><div class="indicator-dot" style="background-color: ' + rule.color + ';"></div></td><td>' + rule.title + '</td></tr>');
+                                });
+                            }
+
+                            var seoGridResult = $reloadseo('.seo-score-grid.' + requestKey).first();
+                            if(seoGridResult.length && 'score' in scoreData)
+                            {
+                                seoGridResult.html('<div style="background-color: ' + scoreData.color + '; width: 18px; height: 18px; float: left; border-radius: 100px;"></div>' + scoreData.score);
+                            } 
+
+                            //Remove one from the count.
+                            count--;
+
+                            if(data != null)
+                            {
+                                //We received an error message, change the done message.
+                                doneMessage.message = data;
+                                doneMessage.type = 'error';
+                            }
+
+                            if(count == 0)
+                            {
+                                //All update requests have been finished, set the message.
+                                reloadseo.setMessage(doneMessage.message, doneMessage.type, 'reload_seo_message');
+                            }
+                        });
+                    });
+                });
+            }
+        });
     },
 
     /**

@@ -119,26 +119,7 @@ class Reload_Seo_Model_Observer
 	 */
 	public function catalogProductSaveAfter($observer)
 	{
-		$post = Mage::app()->getRequest()->getPost('product');
-		try
-		{
-			if($post != null)
-			{
-				if(array_key_exists('reload_seo_keywords', $post))
-				{
-					Mage::getModel('reload_seo/score')->loadById($observer->getProduct()->getId(), 'product')->setKeywords($post['reload_seo_keywords'])->save();
-				}
-				else
-				{
-					Mage::getModel('reload_seo/score')->loadById($observer->getProduct()->getId(), 'product')->setKeywords('')->save();
-				}
-			}
-		}
-		catch(Exception $ex)
-		{
-			//Hmz.
-			Mage::getSingleton('adminhtml/session')->addError(Mage::helper('reload_seo')->__('Something went wrong while updating the product SEO status.'));
-		}
+		$this->_afterSave($observer->getProduct()->getId(), 'product', 'product');
 	}
 
 	/**
@@ -149,26 +130,45 @@ class Reload_Seo_Model_Observer
 	 */
 	public function catalogCategorySaveAfter($observer)
 	{
-		$post = Mage::app()->getRequest()->getPost('general');
+		$this->_afterSave($observer->getCategory()->getId(), 'category', 'general');
+	}
+
+	/**
+	 * _afterSave saves the score for a product or a category.
+	 * 
+	 * @param  int 		$id        The product or category id.
+	 * @param  string 	$type      Either product or category
+	 * @param  string  	$postField Either product or general
+	 * 
+	 * @return void
+	 */
+	protected function _afterSave($id, $type, $postField)
+	{
+		$post = Mage::app()->getRequest()->getPost($postField);
+
 		try
 		{
 			if($post != null)
 			{
 				if(array_key_exists('reload_seo_keywords', $post))
 				{
-					Mage::getModel('reload_seo/score')->loadById($observer->getCategory()->getId(), 'category')->setKeywords($post['reload_seo_keywords'])->save();
+					$keywords = $post['reload_seo_keywords'];
 				}
 				else
 				{
-					Mage::getModel('reload_seo/score')->loadById($observer->getCategory()->getId(), 'category')->setKeywords('')->save();
+					$keywords = '';
 				}
+				Mage::getModel('reload_seo/score')->loadById($id, $type)->setKeywords($keywords)->save();
 			}
 		}
 		catch(Exception $ex)
 		{
 			//Hmz.
-			Mage::getSingleton('adminhtml/session')->addError(Mage::helper('reload_seo')->__('Something went wrong while updating the category SEO status.'));
+			Mage::getSingleton('adminhtml/session')->addError(Mage::helper('reload_seo')->__('Something went wrong while updating the ' . $type . ' SEO status.'));
 		}
+
+		$storeId = (int) Mage::app()->getRequest()->getParam('store');
+		Mage::helper('reload_seo')->addScoreUpdateRequest($id, $type, $storeId);
 	}
 
 	/**
@@ -244,52 +244,6 @@ class Reload_Seo_Model_Observer
 	}
 
 	/**
-	 * prepareLayoutBefore is called at the core_block_abstract_prepare_layout_before event.
-	 * 
-	 * @param  Varien_Event_Observer $observer
-	 * @return void
-	 */
-	public function prepareLayoutBefore($observer)
-	{
-		//Obtain the block which is being prepared.
-		$block = $observer->getBlock();
-
-		if($block instanceof Mage_Adminhtml_Block_Catalog_Product_Edit || $block instanceof Mage_Adminhtml_Block_Catalog_Category_Edit_Form)
-		{
-			//If the block is Product_Edit or Category_Edit block we want to load the score from the API.
-			if($block instanceof Mage_Adminhtml_Block_Catalog_Product_Edit)
-			{
-				//Get the item and prepare the error message for later use.
-				$item = $block->getProduct();
-				$errorMessage = Mage::helper('reload_seo')->__('Something went wrong while updating the product SEO status.');
-
-				if($item->getData('attribute_set_id') === null)
-				{
-					//This is a new product without an attribute set yet, so do nothing.
-					return;
-				}
-			}
-			else
-			{
-				//Get the item and prepare the error message for later use.
-				$item = $block->getCategory();
-				$errorMessage = Mage::helper('reload_seo')->__('Something went wrong while updating the category SEO status.');
-			}
-
-			try
-			{
-				//Ask the helper to update the item.
-				Mage::helper('reload_seo')->updateItem($item);
-			}
-			catch(Exception $ex)
-			{
-				//Something went wrong while updating, show the error message.
-				Mage::getSingleton('adminhtml/session')->addError($errorMessage);
-			}
-		}
-	}
-
-	/**
 	 * prepareProductGridMassactions is called at the adminhtml_catalog_product_grid_prepare_massaction event.
 	 * 
 	 * @param  Varien_Event_Observer $observer
@@ -324,7 +278,7 @@ class Reload_Seo_Model_Observer
 	{
 		//Obtain the block and the transport object.
 		$block = $observer->getBlock();
-		$transport = $observer->getTransport();
+		$transport = $observer->getTransport();		
 
 		$html = $transport->getHtml();
 		if($block instanceof Mage_Adminhtml_Block_Catalog_Category_Edit_Form)
@@ -413,6 +367,32 @@ class Reload_Seo_Model_Observer
 			);
 
 			$html .= '<script type="text/javascript">reloadseo.checkKey(' . json_encode($vars) . ');</script>';
+		}
+
+		if($block instanceof Mage_Adminhtml_Block_Page_Head || $block instanceof Mage_Adminhtml_Block_Catalog_Category_Edit_Form)
+		{
+			//Load the request queue.
+			$requests = Mage::helper('reload_seo')->getScoreUpdateRequests();
+			$requestsWithData = array();
+			foreach($requests as $requestKey => $request)
+			{
+				//Load the category or product.
+				$item = Mage::getModel('catalog/' . $request['type'])
+					->setStoreId($request['store'])
+					->load($request['id']);
+
+				//Obtain the data for the update.
+				$requestsWithData[] = Mage::helper('reload_seo')->getDataForUpdate($item, $requestKey);
+			}
+
+			if(count($requestsWithData) > 0)
+			{
+				$message = Mage::helper('reload_seo')->__('The SEO scores are being updated.');
+				$doneMessage = Mage::helper('reload_seo')->__('The SEO scores have been updated.');
+
+				//Execute the javascript function to update the scores.
+				$html .= '<script type="text/javascript">reloadseo.processUpdates(' . json_encode($requestsWithData) . ', ' . json_encode($message) . ', ' . json_encode($doneMessage) . ');</script>';
+			}
 		}
 
 		//Store the complete html in the transport object.

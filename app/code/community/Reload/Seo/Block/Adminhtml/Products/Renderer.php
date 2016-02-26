@@ -19,16 +19,18 @@ class Reload_Seo_Block_Adminhtml_Products_Renderer extends Mage_Adminhtml_Block_
 	{
 		if($this->getColumn()->getIndex() === 'seo_score')
 		{
+			$updateKey = $row->getId() . '-product-' . (int) Mage::app()->getRequest()->getParam('store');
+
 			//Only render the seo score column.
 			if($row->getSeoScore() === null)
 			{
 				//No SEO score is known yet.
-				return Mage::helper('reload_seo')->__('Unknown');
+				return '<div class="seo-score-grid ' .$updateKey . '">' . Mage::helper('reload_seo')->__('Unknown') . '</div>';
 			}
 
 			//Create the score html and return it.
 			$score = $row->getSeoScore();
-			return '<div><div style="background-color: ' . $row->getSeoColor() . '; width: 18px; height: 18px; float: left; border-radius: 100px;"></div>' . $score . '</div>';
+			return '<div class="seo-score-grid ' .$updateKey . '"><div style="background-color: ' . $row->getSeoColor() . '; width: 18px; height: 18px; float: left; border-radius: 100px;"></div>' . $score . '</div>';
 		}		 
 	}
 }

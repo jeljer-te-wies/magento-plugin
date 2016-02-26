@@ -26,6 +26,66 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
     );
 
     /**
+     * addScoreUpdateRequest adds a update request to the queue.
+     * 
+     * @param int       $id    The product or category id.
+     * @param string    $type  Either product or category.
+     * @param int       $store The store id.
+     */
+    public function addScoreUpdateRequest($id, $type, $store)
+    {
+        $requests = $this->getScoreUpdateRequests();
+
+        $requests[$id . '-' . $type . '-' . $store] = array(
+            'id' => $id,
+            'type' => $type,
+            'store' => $store
+        );
+
+        Mage::getSingleton('adminhtml/session')->setScoreUpdateRequests(json_encode($requests));
+    }
+
+    /**
+     * removeScoreUpdateRequest removes a update request from the queue and returns it.
+     * 
+     * @param string $requestKey The request key.
+     *
+     * @return array The update request.
+     */
+    public function removeScoreUpdateRequest($requestKey)
+    {
+        $requests = $this->getScoreUpdateRequests();
+
+        $request = null;
+        if(array_key_exists($requestKey, $requests))
+        {
+            $request = $requests[$requestKey];
+            unset($requests[$requestKey]);
+        }
+
+        Mage::getSingleton('adminhtml/session')->setScoreUpdateRequests(json_encode($requests));
+        return $request;
+    }
+
+    /**
+     * getScoreUpdateRequests gets the score update request queue.
+     * 
+     * @return array
+     */
+    public function getScoreUpdateRequests()
+    {
+        $session = Mage::getSingleton('adminhtml/session');
+
+        $requests = json_decode($session->getScoreUpdateRequests(), true);
+        if(!is_array($requests))
+        {
+            $requests = array();
+        }
+
+        return $requests;
+    }
+
+    /**
      * removeItem removes one product or category SEO status.
      * 
      * @param Mage_Catalog_Model_Category|Mage_Catalog_Model_Product $item
@@ -94,36 +154,23 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
     }
 
     /**
-     * updateItem updates one product or category.
+     * getDataForUpdate prepares the data for a score update of a single item.
      * 
-     * @param Mage_Catalog_Model_Category|Mage_Catalog_Model_Product $item
-     * @return void
+     * @param  Mage_Catalog_Model_Category|Mage_Catalog_Model_Product   $item
+     * @param  string                                                   $requestKey
+     * 
+     * @return array
      */
-    public function updateItem($item)
+    public function getDataForUpdate($item, $requestKey)
     {
         //Create an array for the post data.
         $data = array();
-        if($item instanceof Mage_Catalog_Model_Category)
-        {
-            //The item is a category, the sku will be category-<id>
-            $data['product[sku]'] = 'category-' . $item->getId();
-
-            //Prepare the error for later use.
-            $error = $this->__('Something went wrong while updating the category SEO status.');
-
-            //Obtain the score object for later use.
-            $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'category');
-            $type = 'category';
-        }
-        elseif($item instanceof Mage_Catalog_Model_Product)
+        if($item instanceof Mage_Catalog_Model_Product)
         {
             //The item is a product, the sku will be used as is.
             $data['product[sku]'] = $item->getSku();
             $data['product[status]'] = $item->getStatus();
             $data['product[visibility'] = $item->getVisibility();
-
-            //Prepare the error for later use.
-            $error = $this->__('Something went wrong while updating the product SEO status.');
 
             //Obtain the score object for later use.
             $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'product');
@@ -144,7 +191,12 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
         }
         else
         {
-            Mage::throwException('The requested items is not a product nor a category.');
+            //The item is a category, the sku will be category-<id>
+            $data['product[sku]'] = 'category-' . $item->getId();
+
+            //Obtain the score object for later use.
+            $score = Mage::getModel('reload_seo/score')->loadById($item->getId(), 'category');
+            $type = 'category';
         }
 
         if($score->getKeywords() == null && Mage::getStoreConfig('reload/reload_seo_group/reload_seo_title_default'))
@@ -183,16 +235,13 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
         //Add the store data.
         $data['stores'] = $this->collectStores();
 
-        //Execute the request.
-        $result = $this->executeCurlRequest($url, $data);
-        if($result === null || !array_key_exists('score', $result))
-        {
-            //Something went wrong, throw the prepared error.
-            throw new Exception($error);
-        }
-
-        //Merge the result in the score object.
-        $score->mergeFromResult($result);
+        return array(
+            'data' => $data,
+            'url' => $url,
+            'save_url' => Mage::helper('adminhtml')->getUrl('adminhtml/seo/saveResult', array('request_key' => $requestKey)),
+            'form_key' => Mage::getSingleton('core/session')->getFormKey(),
+            'request_key' => $requestKey
+        );
     }
 
     /**

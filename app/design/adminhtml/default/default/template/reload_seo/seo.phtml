@@ -67,7 +67,7 @@ if($this->getScore() != null) {
 	</div>
 </div>
 
-<div id="reload-seo-scores" class="reload-seo-scores">
+<div id="reload-seo-scores" class="reload-seo-scores <?php echo $this->getUpdateRequestKey(); ?>">
 	<div class="seo-results">
 		<div class="base-score seo-box">
 			<p><?php echo Mage::helper('reload_seo')->__('Based on our information we have calculated the following SEO-score:'); ?></p>

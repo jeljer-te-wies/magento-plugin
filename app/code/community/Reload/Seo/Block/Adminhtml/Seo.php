@@ -123,6 +123,25 @@ class Reload_Seo_Block_Adminhtml_Seo extends Mage_Adminhtml_Block_Template
 		return null;
 	}
 
+	public function getUpdateRequestKey()
+	{
+		if($this->isProductView())
+		{
+			//This is an product view, obtain the product id.
+			$referenceId = Mage::registry('current_product')->getId();
+			$type = 'product';
+		}
+		else
+		{
+			//This is an category view, obtain the category id.
+			$referenceId = Mage::registry('category')->getId();
+			$type = 'category';
+		}
+
+		$storeId = (int) $this->getStoreId();
+		return $referenceId . '-' . $type . '-' . $storeId;
+	}
+
 	public function getStoreId()
 	{
 		if($this->isProductView())

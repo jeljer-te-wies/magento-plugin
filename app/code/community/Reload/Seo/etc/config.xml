@@ -118,15 +118,6 @@
                     </reload_seo>
                 </observers>
             </core_block_abstract_prepare_layout_after>
-            <core_block_abstract_prepare_layout_before>
-                <observers>
-                    <reload_seo>
-                        <type>singleton</type>
-                        <class>reload_seo/observer</class>
-                        <method>prepareLayoutBefore</method>
-                    </reload_seo>
-                </observers>
-            </core_block_abstract_prepare_layout_before>
             <catalog_product_collection_load_before>
                 <observers>
                     <reload_seo>

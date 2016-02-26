@@ -6,17 +6,7 @@
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */ -->
 <layout>
-    <adminhtml_catalog_product_index>
-        <reference name="head">
-            <action method="addJs">
-                <script>reload/jquery.min.js</script>
-            </action>
-            <action method="addJs">
-                <script>reload/seo.js</script>
-            </action>
-        </reference>
-    </adminhtml_catalog_product_index>
-    <adminhtml_catalog_product_new>
+    <default>
         <reference name="head">
             <action method="addJs">
                 <script>reload/jquery.min.js</script>
@@ -38,6 +28,8 @@
                 <stylesheet>reload_seo/css/seo.css</stylesheet>
             </action>
         </reference>
+    </default>
+    <adminhtml_catalog_product_new>
         <reference name="content">
             <block type="reload_seo/adminhtml_seo" template="reload_seo/seo.phtml" name="seoscore">
                 <action method="setData">
@@ -48,27 +40,6 @@
         </reference>
     </adminhtml_catalog_product_new>
     <adminhtml_catalog_product_edit>
-        <reference name="head">
-            <action method="addJs">
-                <script>reload/jquery.min.js</script>
-            </action>
-            <action method="addJs">
-                <script>reload/select2/select2.min.js</script>
-            </action>
-            <action method="addItem">
-                <type>js_css</type>
-                <name>reload/select2/select2.css</name>
-            </action>
-            <action method="addJs">
-                <script>reload/seo.js</script>
-            </action>
-            <action method="addJs">
-                <script>reload/snippet.js</script>
-            </action>
-            <action method="addCss">
-                <stylesheet>reload_seo/css/seo.css</stylesheet>
-            </action>
-        </reference>
         <reference name="content">
             <block type="reload_seo/adminhtml_seo" template="reload_seo/seo.phtml" name="seoscore">
                 <action method="setData">
@@ -78,27 +49,4 @@
             </block>
         </reference>
     </adminhtml_catalog_product_edit>
-    <adminhtml_catalog_category_edit>
-        <reference name="head">
-            <action method="addJs">
-                <script>reload/jquery.min.js</script>
-            </action>
-            <action method="addJs">
-                <script>reload/select2/select2.min.js</script>
-            </action>
-            <action method="addItem">
-                <type>js_css</type>
-                <name>reload/select2/select2.css</name>
-            </action>
-            <action method="addJs">
-                <script>reload/seo.js</script>
-            </action>
-            <action method="addJs">
-                <script>reload/snippet.js</script>
-            </action>
-            <action method="addCss">
-                <stylesheet>reload_seo/css/seo.css</stylesheet>
-            </action>
-        </reference>
-    </adminhtml_catalog_category_edit>
 </layout>
