@@ -13,7 +13,7 @@ class Reload_Seo_Helper_Abstract extends Mage_Core_Helper_Abstract
      * Variable for storing the API url in.
      * @var string
      */
-    protected $url = 'http://api.reloadseo.com/api/';
+    protected $url = 'https://api.reloadseo.com/api/';
 
     /**
      * Variable for storing the API version in.
