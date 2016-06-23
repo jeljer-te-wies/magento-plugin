@@ -86,6 +86,8 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
     {
         $data = array();
 
+        $customFieldMapping = Mage::helper('reload_seo')->getFieldMappingsCustom('product');
+
         //Loop over all the products.
         foreach($this->productCollection as $product)
         {
@@ -140,6 +142,14 @@ class Reload_Seo_Helper_Massaction extends Reload_Seo_Helper_Data
                 if($product->getData($internal) != null)
                 {
                     $data[] = http_build_query(array('products[]' . $external => $product->getData($internal)));
+                }
+            }
+
+            foreach($customFieldMapping as $external => $internal)
+            {
+                if($product->getData($internal) != null)
+                {
+                    $data[] = http_build_query(array('products[]custom[' . $internal . ']' => $product->getData($internal)));
                 }
             }
 

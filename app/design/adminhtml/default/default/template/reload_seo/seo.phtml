@@ -89,6 +89,7 @@ if($this->getScore() != null) {
 	</div>
 </div>
 <?php $fieldMapping = Mage::helper('reload_seo')->getFieldMappings($this->getScore()->getType()); ?>
+<?php $fieldMappingCustom = Mage::helper('reload_seo')->getFieldMappingsCustom($this->getScore()->getType()); ?>
 <?php $ajaxUrl = Mage::helper('reload_seo')->buildUrl('show', array(
     'key' => Mage::getStoreConfig('reload/reload_seo_group/reload_seo_key'), 
     'language' => Mage::app()->getLocale()->getLocaleCode(),
@@ -111,6 +112,7 @@ reloadseo.stores = <?php echo json_encode(Mage::helper('reload_seo')->collectSto
 
 reloadseo.vars.type = '<?php echo $this->getScore()->getType(); ?>';
 reloadseo.vars.field_mapping = <?php echo json_encode($fieldMapping); ?>;
+reloadseo.vars.field_mapping_custom = <?php echo json_encode($fieldMappingCustom); ?>;
 reloadseo.vars.invisble_value = <?php echo Mage_Catalog_Model_Product_Visibility::VISIBILITY_NOT_VISIBLE; ?>;
 
 //Init the system.

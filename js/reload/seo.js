@@ -283,6 +283,14 @@ var reloadseo = {
             }
         });
 
+        //Loop over the custom field mappings if this is a product.
+        if(self.vars.type === 'product') {
+            $reloadseo.each(self.vars.field_mapping_custom, function(internal, external)
+            {
+                $reloadseo("[name='product[" + internal + "]']").addClass('track-seo').data('track-field-custom', external).data('track-field-internal', internal);
+            });
+        }
+
         //Bind the key up listener to all fields.
         $reloadseo(".track-seo").bind('keyup', function()
         {
@@ -471,6 +479,7 @@ var reloadseo = {
      */
     collectData: function(replaceData)
     {
+        var customData = {};
         var data = {};
         //Loop over all fields and get the value.
         $reloadseo('.track-seo').each(function()
@@ -483,6 +492,11 @@ var reloadseo = {
             if(typeof replaceData !== 'undefined' && replaceData.field == $reloadseo(this).data('track-field-internal'))
             {
                 data[$reloadseo(this).data('track-field')] = replaceData.content;
+            }
+
+            if(typeof $reloadseo(this).data('track-field-custom') !== 'undefined')
+            {
+                customData[$reloadseo(this).data('track-field-custom')] = $reloadseo(this).val();
             }
         });
 
@@ -510,6 +524,8 @@ var reloadseo = {
         {
             data['visibility'] = visibilitySelect.val();
         }
+
+        data.custom = customData;
 
         return data;
     },

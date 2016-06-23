@@ -246,6 +246,25 @@ class Reload_Seo_Helper_Data extends Reload_Seo_Helper_Abstract
     }
 
     /**
+     * getFieldMappingsCustom creates the custom field mapping.
+     * 
+     * @param  string $type
+     * @return array
+     */
+    public function getFieldMappingsCustom($type)
+    {
+        $fieldMapping = array();
+        if($type === 'product')
+        {
+            foreach(explode(',', Mage::getStoreConfig('reload/reload_seo_mappings/reload_seo_mapping_custom')) as $custom)
+            {
+                $fieldMapping[$custom] = $custom;
+            }
+        }
+        return $fieldMapping;
+    }
+
+    /**
      * getFieldMappings creates the field mapping.
      * 
      * @param  string $type
